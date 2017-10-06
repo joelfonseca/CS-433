@@ -1,2 +1,4 @@
 
 *.csv
+*.pyc
+project1/.ipynb_checkpoints/project1-checkpoint.ipynb
