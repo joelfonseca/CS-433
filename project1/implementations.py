@@ -1,6 +1,8 @@
 import numpy as np
 import random
 
+
+
 ################################################################################
 # Asked implementations ########################################################
 ################################################################################
@@ -33,23 +35,21 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma, batch_size=1):
 
     return (w, loss)
 
-def least_squares1(y, tx):
+def least_squares(y, tx):
     # Least squares regression using normal equations
 
-    print(1)
-    w = np.linalg.solve(tx.T.dot(tx), tx.T.dot(y))
-    print(2)
+    w = np.linalg.solve(tx.dot(tx.T), tx.dot(y))
     loss = compute_loss(y, tx, w)
-    print(3)
 
     return (w, loss)
 
 def ridge_regression(y, tx, lambda_):
     # Ridge regression using normal equations
 
-    (N,D) = tx.shape
-    tikhonov_matrix = lambda_ * np.identity(D)
-    w = np.linealg.solve((tx.T.dot(tx) + tikhonov_matrix.T.dot(tikhonov_matrix)), tx.T.dot(y))
+    (D,N) = tx.shape
+    print('D: ', D, 'N: ', N)
+    tikhonov_matrix = lambda_*2*N * np.identity(D)
+    w = np.linalg.solve((tx.dot(tx.T) + tikhonov_matrix), tx.dot(y))
     loss = compute_loss(y, tx, w)
 
     return (w, loss)
@@ -110,7 +110,7 @@ def compute_gradient(y, tx, w):
 def compute_loss(y, tx, w):
      """Compute the gradient and loss using MSE."""
      N = len(y)
-     e = y - tx.dot(w)
+     e = y - tx.T.dot(w)
      loss = 1/(2*N) * np.sum(e**2, axis=0)
 
      return loss
@@ -192,9 +192,9 @@ def init_w(tx):
 #    """Remaps values of higgs_value and background_value of y vector."""
 #    return pd.Series(list(map(lambda x : higgs_value if x=='s' else background_value, named_y)))
 
-def accuracy(y, tx, w):
+def accuracy(y, tx, w, lower_bound, upper_bound):
     """Computes the accuracy of the predictions."""
-    return np.mean(y == predict_labels(w, tx))
+    return np.mean(y == predict_labels(w, tx, lower_bound, upper_bound))
 
 def build_k_indices(y, k_fold, seed):
     """Build k indices for k-fold."""
@@ -206,7 +206,7 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
     return np.array(k_indices)
 
-def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, degree=0):
+def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, lower_bound, upper_bound, degree=0):
     """return the loss of logistic regression."""
     y_test = y[k_indices[k]]
     x_test = x[k_indices[k]]
@@ -220,12 +220,21 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, d
     #basis_train = build_poly(x_train, degree)
     #basis_test = build_poly(x_test, degree)
 
-    (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
+    #(w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
     #(w_tr, loss_tr) = least_squares(y_train, x_train.T)
+    (w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
 
-    acc = accuracy(y_test, x_test, w_tr)
+    acc = accuracy(y_test, x_test, w_tr, lower_bound, upper_bound)
 
     return w_tr, acc
+
+def predict_labels(weights, data, lower_bound, upper_bound):
+    """Generates class predictions given weights, and a test data matrix"""
+    threshold = (upper_bound - lower_bound)/2
+    y_pred = np.dot(data, weights)
+    y_pred[np.where(y_pred <= threshold)] = lower_bound
+    y_pred[np.where(y_pred > threshold)] = upper_bound
+    return y_pred
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -290,14 +299,6 @@ def bias_variance_decomposition_visualization(degrees, rmse_tr, rmse_te):
 # About submission
 ################################################################################
 
-def predict_labels(weights, data):
-    """Generates class predictions given weights, and a test data matrix."""
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-
-    return y_pred
-
 def create_csv_submission(ids, y_pred, name):
     """
     Creates an output file in csv format for submission to kaggle.
@@ -345,11 +346,11 @@ def categorical_rep_data(cat_col):
 
     return cat_col.fillna(v)
 
-def balance(x, y):
+def balance(x, y, lower_bound, upper_bound):
     """Balances data with equal number of occurencies s and b"""
 
-    idx_first = np.nonzero(y == 1)[0]
-    idx_second = np.nonzero(y == -1)[0]
+    idx_first = np.nonzero(y == upper_bound)[0]
+    idx_second = np.nonzero(y == lower_bound)[0]
 
     size_first = idx_first.shape[0]
     size_second = idx_second.shape[0]
@@ -360,6 +361,8 @@ def balance(x, y):
     random.shuffle(idx_second)
 
     idx_list = np.concatenate((idx_first[:min_], idx_second[:min_]), axis=0)
+
+    random.shuffle(idx_list)
 
     y = y[idx_list,:]
     x = x[idx_list,:]
