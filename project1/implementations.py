@@ -171,17 +171,24 @@ def build_poly_feature(x, degree):
     if x.ndim == 1:
         x = x[:,np.newaxis]
 
-    polynomial_basis = x**0
+    polynomial_basis = x**1
 
-    for j in range(1,degree+1):
-        polynomial_basis = np.hstack((polynomial_basis, x**j))
+    for j in range(2, degree+1):
+        polynomial_basis = np.vstack((polynomial_basis, x**j))
     return polynomial_basis
 
 def build_poly_tx(tx, degree):
 
-    tx_polynomial = build_poly_feature(tx.T[0].T, degree)
-    for c in tx.T[1:]:
-        tx_polynomial = np.hstack((tx_polynomial, build_poly_feature(c.T, degree)))
+    x = tx.T
+
+    (D,N) = x.shape
+    tx_polynomial = build_poly_feature(x[0], degree)
+
+    for c in x[1:]:
+        tx_polynomial = np.hstack((tx_polynomial, build_poly_feature(c, degree)))
+    ones = np.ones((1,D))
+    tx_polynomial = np.vstack((ones, tx_polynomial))
+
     return tx_polynomial
 
 def init_w(tx):
@@ -220,8 +227,8 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, l
     #basis_train = build_poly(x_train, degree)
     #basis_test = build_poly(x_test, degree)
 
-    #(w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
-    (w_tr, loss_tr) = least_squares(y_train, x_train.T)
+    (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
+    #(w_tr, loss_tr) = least_squares(y_train, x_train.T)
     #(w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
 
     acc = accuracy(y_test, x_test, w_tr, lower_bound, upper_bound)
