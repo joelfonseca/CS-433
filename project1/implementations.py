@@ -33,11 +33,14 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma, batch_size=1):
 
     return (w, loss)
 
-def least_squares(y, tx):
+def least_squares1(y, tx):
     # Least squares regression using normal equations
 
+    print(1)
     w = np.linalg.solve(tx.T.dot(tx), tx.T.dot(y))
+    print(2)
     loss = compute_loss(y, tx, w)
+    print(3)
 
     return (w, loss)
 
@@ -218,6 +221,8 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, d
     #basis_test = build_poly(x_test, degree)
 
     (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
+    #(w_tr, loss_tr) = least_squares(y_train, x_train.T)
+
     acc = accuracy(y_test, x_test, w_tr)
 
     return w_tr, acc
@@ -318,10 +323,13 @@ def min_max(tx):
 def standardize(tx):
     """Standardizes the data."""
 
-    centered_data = tx - np.mean(tx, axis=1)[:,np.newaxis]
-    std_data = centered_data / np.std(tx, axis=1)[:,np.newaxis]
+    mean = np.mean(tx, axis=1)[:,np.newaxis]
+    std = np.std(tx, axis=1)[:,np.newaxis]
 
-    return std_data
+    centered_data = tx - mean
+    std_data = centered_data / std
+
+    return mean, std, std_data
 
 def replace_nan_by_median(data):
     """Replaces the NaN values with the median of the corresponding feature."""
@@ -337,7 +345,7 @@ def categorical_rep_data(cat_col):
 
     return cat_col.fillna(v)
 
-def balance(tx, y):
+def balance(x, y):
     """Balances data with equal number of occurencies s and b"""
 
     idx_first = np.nonzero(y == 1)[0]
@@ -354,12 +362,7 @@ def balance(tx, y):
     idx_list = np.concatenate((idx_first[:min_], idx_second[:min_]), axis=0)
 
     y = y[idx_list,:]
-
-    tx_first = tx.T[idx_first[:min_],:]
-    tx_second = tx.T[idx_second[:min_],:]
-
-    x = np.concatenate((tx_first, tx_second), axis=0)
-    np.random.shuffle(x)
+    x = x[idx_list,:]
 
     return x.T, y
 
