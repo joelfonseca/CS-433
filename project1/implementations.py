@@ -221,8 +221,8 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, l
     #basis_test = build_poly(x_test, degree)
 
     #(w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
-    #(w_tr, loss_tr) = least_squares(y_train, x_train.T)
-    (w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
+    (w_tr, loss_tr) = least_squares(y_train, x_train.T)
+    #(w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
 
     acc = accuracy(y_test, x_test, w_tr, lower_bound, upper_bound)
 
@@ -332,9 +332,21 @@ def standardize(tx):
 
     return mean, std, std_data
 
+def standardize_predef(tx, mean, std):
+    """Standardizes the data."""
+
+    centered_data = tx - mean
+    std_data = centered_data / std
+
+    return std_data
+
 def replace_nan_by_median(data):
     """Replaces the NaN values with the median of the corresponding feature."""
     return np.where(np.isnan(data), np.nanmedian(data, axis=1)[:,np.newaxis], data)
+
+def replace_nan_by_mean(data):
+    """Replaces the NaN values with the mean of the corresponding feature."""
+    return np.where(np.isnan(data), np.nanmean(data, axis=1)[:,np.newaxis], data)
 
 def categorical_rep_data(cat_col):
     """
