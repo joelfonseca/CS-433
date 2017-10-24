@@ -47,7 +47,7 @@ def ridge_regression(y, tx, lambda_):
     # Ridge regression using normal equations
 
     (D,N) = tx.shape
-    print('D: ', D, 'N: ', N)
+    #print('D: ', D, 'N: ', N)
     tikhonov_matrix = lambda_*2*N * np.identity(D)
     w = np.linalg.solve((tx.dot(tx.T) + tikhonov_matrix), tx.dot(y))
     loss = compute_loss(y, tx, w)
@@ -59,9 +59,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma, lambda_=0):
 
     w = initial_w
     for n_iter in range(max_iters):
-        (w, loss) = learning_by_gradient_descent(y, tx, w, gamma/(n_iter+1), lambda_)
-        """if n_iter%100 == 0:
-            print(accuracy(y, tx, w))"""
+        (w, loss) = learning_by_gradient_descent(y, tx, w, gamma, lambda_)
 
     return (w, loss)
 
@@ -174,22 +172,22 @@ def build_poly_feature(x, degree):
     polynomial_basis = x**1
 
     for j in range(2, degree+1):
-        polynomial_basis = np.vstack((polynomial_basis, x**j))
+        polynomial_basis = np.hstack((polynomial_basis, x**j))
     return polynomial_basis
 
 def build_poly_tx(tx, degree):
-
+    
     x = tx.T
 
-    (D,N) = x.shape
-    tx_polynomial = build_poly_feature(x[0], degree)
+    (N,D) = x.shape
+    x_polynomial = build_poly_feature(x[:,0], degree)
 
-    for c in x[1:]:
-        tx_polynomial = np.hstack((tx_polynomial, build_poly_feature(c, degree)))
-    ones = np.ones((1,D))
-    tx_polynomial = np.vstack((ones, tx_polynomial))
+    for c_idx in range(1, D):
+        x_polynomial = np.hstack((x_polynomial, build_poly_feature(x[:,c_idx], degree)))
+    ones = np.ones((N,1))
+    x_polynomial = np.hstack((ones, x_polynomial))
 
-    return tx_polynomial
+    return x_polynomial.T
 
 def init_w(tx):
     """Initializes w with random values in [0,1) based on shape of tx."""
@@ -213,7 +211,7 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
     return np.array(k_indices)
 
-def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, lower_bound, upper_bound, degree=0):
+def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, lower_bound, upper_bound, model="least_squares"):
     """return the loss of logistic regression."""
     y_test = y[k_indices[k]]
     x_test = x[k_indices[k]]
@@ -224,12 +222,14 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, l
     y_train = y[k_indices]
     x_train = x[k_indices]
 
-    #basis_train = build_poly(x_train, degree)
-    #basis_test = build_poly(x_test, degree)
-
-    (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
-    #(w_tr, loss_tr) = least_squares(y_train, x_train.T)
-    #(w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
+    if model == "logistic_regression":
+        (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
+    elif model == "least_squares":
+        (w_tr, loss_tr) = least_squares(y_train, x_train.T)
+    elif model == "ridge_regression":
+        (w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
+    else:
+        raise ValueError("Unknown model: %s" % model)
 
     acc = accuracy(y_test, x_test, w_tr, lower_bound, upper_bound)
 
@@ -237,7 +237,7 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, l
 
 def predict_labels(weights, data, lower_bound, upper_bound):
     """Generates class predictions given weights, and a test data matrix"""
-    threshold = (upper_bound - lower_bound)/2
+    threshold = (upper_bound + lower_bound)/2
     y_pred = np.dot(data, weights)
     y_pred[np.where(y_pred <= threshold)] = lower_bound
     y_pred[np.where(y_pred > threshold)] = upper_bound

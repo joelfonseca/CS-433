@@ -31,7 +31,7 @@ def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
 
 def predict_labels_kaggle(weights, data, lower_bound, upper_bound):
     """Generates class predictions given weights, and a test data matrix"""
-    threshold = (upper_bound - lower_bound)/2
+    threshold = (upper_bound + lower_bound)/2
     y_pred = np.dot(data, weights)
     y_pred[np.where(y_pred <= threshold)] = -1
     y_pred[np.where(y_pred > threshold)] = 1
