@@ -8,6 +8,7 @@ def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
     x = np.genfromtxt(data_path, delimiter=",", skip_header=1, usemask=True, missing_values="-999")
+    #x = np.genfromtxt(data_path, delimiter=",", skip_header=1)
 
     #print(x.filled(np.nan))
     x = x.filled(np.nan)
