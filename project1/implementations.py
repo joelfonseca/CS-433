@@ -6,28 +6,29 @@ import random
 ################################################################################
 # Asked implementations ########################################################
 ################################################################################
-def least_squares_GD(y, tx, initial_w, max_iters, gamma):
+def least_squares_GD(y, tx, initial_w, max_iter, gamma):
     # Linear regression using gradient descent
 
     w = initial_w
-    for n_iter in range(max_iters):
+    for n_iter in range(max_iter):
         # compute gradient and loss
         gradient = compute_gradient(y, tx, w)
+
         loss = compute_loss(y, tx, w)
         # update w by gradient
         w = w - gamma * gradient
 
     return (w, loss)
 
-def least_squares_SGD(y, tx, initial_w, max_iters, gamma, batch_size=1):
+def least_squares_SGD(y, tx, initial_w, max_iter, gamma, batch_size=1):
     # Linear regression using stochastic gradient descent
 
     w = initial_w
     gradient = 0
-    for n_iter in range(max_iters):
+    for n_iter in range(max_iter):
         # compute gradient from minibatch
-        for minibatch_y, minibatch_tx in batch_iter(y, tx, batch_size):
-            gradient = compute_gradient(minibatch_y, minibatch_tx, w)
+        for minibatch_y, minibatch_tx in batch_iter(y, tx.T, batch_size):
+            gradient = compute_gradient(minibatch_y, minibatch_tx.T, w)
         # compute loss
         loss = compute_loss(y, tx, w)
         # update w by gradient
@@ -54,18 +55,18 @@ def ridge_regression(y, tx, lambda_):
 
     return (w, loss)
 
-def logistic_regression(y, tx, initial_w, max_iters, gamma, lambda_=0):
+def logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_=0):
     # Logistic regression using gradient descent or SGD
 
     w = initial_w
-    for n_iter in range(max_iters):
+    for n_iter in range(max_iter):
         (w, loss) = learning_by_gradient_descent(y, tx, w, gamma, lambda_)
 
     return (w, loss)
 
-def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
+def reg_logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_):
     # Regularized logistic regression using gradient descent or SGD
-    return 0
+    return logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_)
 
 ################################################################################
 ################################################################################
@@ -81,6 +82,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
         <DO-SOMETHING>
     """
+
     data_size = len(y)
 
     if shuffle:
@@ -100,18 +102,26 @@ def compute_gradient(y, tx, w):
     """Compute the gradient and loss using MSE"""
 
     N = len(y)
-    e = y - tx.dot(w)
-    gradient = -1/N * tx.T.dot(e)
+    e = y - tx.T.dot(w)
+    if np.isnan(e).any():
+        print("e contains NaN")
+        print("e.shape", e.shape)
+        print("tx.T.shape", tx.T.shape)
+        print("w.shape", w.shape)
+        print("y.shape", y.shape)
+        print(e)
+    gradient = -(1/N) * tx.dot(e)
 
     return gradient
 
 def compute_loss(y, tx, w):
-     """Compute the gradient and loss using MSE."""
-     N = len(y)
-     e = y - tx.T.dot(w)
-     loss = 1/(2*N) * np.sum(e**2, axis=0)
+    """Compute the gradient and loss using MSE."""
+    # N = len(y)
+    #  e = y - tx.T.dot(w)
+    # loss = 1/(2*N) * np.sum(e**2, axis=0)
+    loss = 0
 
-     return loss
+    return loss
 
 def sigmoid(t):
     """Apply sigmoid function on t."""
@@ -122,26 +132,28 @@ def calculate_loss(y, tx, w, lambda_=0):
 
     #print(y.shape, tx.shape, w.shape)
 
-    exp_ = np.exp(tx.dot(w))
+    #  exp_ = np.exp(tx.dot(w))
     #print("exp_: ", exp_)
-    log_ = np.log(1 + exp_)
-    y_ = y * tx.dot(w)
+    #  log_ = np.log(1 + exp_)
+    #  y_ = y * tx.dot(w)
     #sum_test1 = np.sum(log_, axis=0)
     #sum_test2 = np.sum(y_, axis=0)
-    sum_ = np.sum(log_ - y_ , axis=0)
-    reg_term = (lambda_/2)*np.linalg.norm(w)**2
+    # sum_ = np.sum(log_ - y_ , axis=0)
+    #  reg_term = (lambda_/2)*np.linalg.norm(w)**2
 
     #print("\nexp_: ", exp_.max(), "\nlog_: ", log_, "\ny_: ", y_, "\nsum_: ", sum_)
     #print("exp_: ", exp_)
 
-    return sum_ + reg_term
+    #return sum_ + reg_term
+
+    return 0
 
 def calculate_gradient(y, tx, w, lambda_=0):
     """Compute the gradient of loss."""
 
     epsilon = 10e-6
 
-    true = tx.T.dot(sigmoid(tx.dot(w)) - y) + lambda_*np.linalg.norm(w)
+    true = tx.dot(sigmoid(tx.T.dot(w)) - y) + lambda_*np.linalg.norm(w)
     #test = (calculate_loss(y, tx, w + epsilon, 0) - calculate_loss(y, tx, w - epsilon, 0)) / (2*epsilon)
 
     """print("true: ", true)
@@ -211,7 +223,7 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
     return np.array(k_indices)
 
-def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, lower_bound, upper_bound, model="least_squares"):
+def cross_validation(y, x, initial_w, max_iter, k_indices, k, gamma, lambda_, lower_bound, upper_bound, model="least_squares", batch_size=1):
     """return the loss of logistic regression."""
     y_test = y[k_indices[k]]
     x_test = x[k_indices[k]]
@@ -223,11 +235,17 @@ def cross_validation(y, x, initial_w, max_iters, k_indices, k, gamma, lambda_, l
     x_train = x[k_indices]
 
     if model == "logistic_regression":
-        (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iters, gamma, lambda_)
+        (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iter, gamma, lambda_)
     elif model == "least_squares":
         (w_tr, loss_tr) = least_squares(y_train, x_train.T)
     elif model == "ridge_regression":
         (w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
+    elif model == "least_squares_GD":
+        (w_tr, loss_tr) = least_squares_GD(y_train, x_train.T, initial_w, max_iter, gamma)
+    elif model == "least_squares_SGD":
+        (w_tr, loss_tr) = least_squares_SGD(y_train, x_train.T, initial_w, max_iter, gamma, batch_size)
+    elif model == "reg_logistic_regression":
+        (w_tr, loss_tr) = reg_logistic_regression(y_train, x_train.T, initial_w, max_iter, gamma, lambda_)
     else:
         raise ValueError("Unknown model: %s" % model)
 
