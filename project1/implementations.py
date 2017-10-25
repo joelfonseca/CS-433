@@ -366,7 +366,7 @@ def categorical_rep_data(cat_col):
     return cat_col.fillna(v)
 
 def balance(x, y, lower_bound, upper_bound):
-    """Balances data with equal number of occurencies s and b"""
+    """Balances data with equal number of occurencies s and b."""
 
     idx_first = np.nonzero(y == upper_bound)[0]
     idx_second = np.nonzero(y == lower_bound)[0]
@@ -391,11 +391,16 @@ def balance(x, y, lower_bound, upper_bound):
 #create function that transfrom nan into -9999 inverse
 
 def delete_features(tx, threshold):
+    """Deletes the idx from tx which pourcentage of nan is higher than the threshold."""
     idx_to_del = []
     for idx_feature in range(tx.shape[0]):
         if np.isnan(tx[idx_feature]).sum()/tx.shape[1] > threshold:
             idx_to_del.append(idx_feature)
 
+    return np.delete(tx,idx_to_del, axis=0), idx_to_del
+
+def delete_features_from_idx(tx, idx_to_del):
+    """Deletes the idx from tx."""
     return np.delete(tx,idx_to_del, axis=0)
 
 # tentative of doing something
