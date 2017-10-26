@@ -209,9 +209,9 @@ def init_w(tx):
 #    """Remaps values of higgs_value and background_value of y vector."""
 #    return pd.Series(list(map(lambda x : higgs_value if x=='s' else background_value, named_y)))
 
-def accuracy(y, tx, w, lower_bound, upper_bound):
+def accuracy(y, x, w, lower_bound, upper_bound):
     """Computes the accuracy of the predictions."""
-    return np.mean(y == predict_labels(w, tx, lower_bound, upper_bound))
+    return np.mean(y == predict_labels(w, x, lower_bound, upper_bound))
 
 def build_k_indices(y, k_fold, seed):
     """Build k indices for k-fold."""
@@ -349,8 +349,8 @@ def min_max(tx):
 def standardize(tx):
     """Standardizes the data."""
 
-    mean = np.mean(tx, axis=1)[:,np.newaxis]
-    std = np.std(tx, axis=1)[:,np.newaxis]
+    mean = np.nanmean(tx, axis=1)[:,np.newaxis]
+    std = np.nanstd(tx, axis=1)[:,np.newaxis]
 
     centered_data = tx - mean
     std_data = centered_data / std
@@ -426,6 +426,7 @@ def get_jet_masks(x):
         1: x[:, 22] == 1,
         2: x[:, 22] == 2,
         3: x[:, 22] == 3
+        #2: (x[:, 22] == 2) | (x[:, 22] == 3)
     }
 
 # tentative of doing something
