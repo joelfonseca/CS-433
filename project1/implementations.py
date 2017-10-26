@@ -235,7 +235,7 @@ def cross_validation(y, x, initial_w, max_iter, k_indices, k, gamma, lambda_, lo
     x_train = x[k_indices]
 
     if model == "logistic_regression":
-        (w_tr, loss_tr) = logistic_regression(y_train, x_train, initial_w, max_iter, gamma, lambda_)
+        (w_tr, loss_tr) = logistic_regression(y_train, x_train.T, initial_w, max_iter, gamma)
     elif model == "least_squares":
         (w_tr, loss_tr) = least_squares(y_train, x_train.T)
     elif model == "ridge_regression":
@@ -415,6 +415,18 @@ def delete_features(tx, threshold):
             idx_to_del.append(idx_feature)
 
     return np.delete(tx,idx_to_del, axis=0)
+
+def get_jet_masks(x):
+    """
+    Returns 4 masks corresponding to the rows of x with a jet value
+    of 0, 1, 2 and 3 respectively.
+    """
+    return {
+        0: x[:, 22] == 0,
+        1: x[:, 22] == 1,
+        2: x[:, 22] == 2,
+        3: x[:, 22] == 3
+    }
 
 # tentative of doing something
 #def select_corr(y, data, threshold):
