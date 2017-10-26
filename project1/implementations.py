@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 
 
@@ -56,7 +57,7 @@ def ridge_regression(y, tx, lambda_):
     return (w, loss)
 
 def logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_=0):
-    # Logistic regression using gradient descent or SGD
+    """Logistic regression using gradient descent or SGD."""
 
     w = initial_w
     for n_iter in range(max_iter):
@@ -65,7 +66,7 @@ def logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_=0):
     return (w, loss)
 
 def reg_logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_):
-    # Regularized logistic regression using gradient descent or SGD
+    """Regularized logistic regression using gradient descent or SGD."""
     return logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_)
 
 ################################################################################
@@ -205,16 +206,12 @@ def init_w(tx):
     """Initializes w with random values in [0,1) based on shape of tx."""
     return np.random.rand(tx.shape[0])[:,np.newaxis]
 
-#def rename_y(higgs_value, background_value, y):
-#    """Remaps values of higgs_value and background_value of y vector."""
-#    return pd.Series(list(map(lambda x : higgs_value if x=='s' else background_value, named_y)))
-
 def accuracy(y, tx, w, lower_bound, upper_bound):
     """Computes the accuracy of the predictions."""
     return np.mean(y == predict_labels(w, tx, lower_bound, upper_bound))
 
 def build_k_indices(y, k_fold, seed):
-    """Build k indices for k-fold."""
+    """Builds k indices for k-fold."""
     num_row = y.shape[0]
     interval = int(num_row / k_fold)
     np.random.seed(seed)
@@ -224,7 +221,7 @@ def build_k_indices(y, k_fold, seed):
     return np.array(k_indices)
 
 def cross_validation(y, x, initial_w, max_iter, k_indices, k, gamma, lambda_, lower_bound, upper_bound, model="least_squares", batch_size=1):
-    """return the loss of logistic regression."""
+    """Returns the loss of logistic regression."""
     y_test = y[k_indices[k]]
     x_test = x[k_indices[k]]
 
@@ -261,64 +258,28 @@ def predict_labels(weights, data, lower_bound, upper_bound):
     y_pred[np.where(y_pred > threshold)] = upper_bound
     return y_pred
 
-import numpy as np
-import matplotlib.pyplot as plt
+
 
 ################################################################################
 # About plotting results
 ################################################################################
 
-def cross_validation_visualization(lambds, mse_tr, mse_te):
-    """visualization the curves of mse_tr and mse_te."""
-    plt.semilogx(lambds, mse_tr, marker=".", color='b', label='train error')
-    plt.semilogx(lambds, mse_te, marker=".", color='r', label='test error')
-    plt.xlabel("lambda")
-    plt.ylabel("rmse")
-    plt.title("cross validation")
-    plt.legend(loc=2)
-    plt.grid(True)
-    plt.savefig("cross_validation")
+def show_ridge_results(results, len_degrees, name):
+    """Shows the results for different parameters of the ridge regression."""
+    import pandas as pd
+    import matplotlib.ticker as mtick
 
+    df = pd.DataFrame.from_records(results, columns=['degree', 'max_iter', 'batch_size', 'gamma', 'lambda_', 'acc_mean', 'w_mean', 'lambda'])
+    df.plot.hexbin(x='lambda', y='degree', C='acc_mean', gridsize=len_degrees, figsize=(10,6), sharex=False, cmap='cubehelix')
+    plt.xticks(df['lambda'], df['lambda_'].map('{:.5f}'.format), rotation='vertical', fontweight='light') 
 
-def bias_variance_decomposition_visualization(degrees, rmse_tr, rmse_te):
-    """visualize the bias variance decomposition."""
-    rmse_tr_mean = np.expand_dims(np.mean(rmse_tr, axis=0), axis=0)
-    rmse_te_mean = np.expand_dims(np.mean(rmse_te, axis=0), axis=0)
-    plt.plot(
-        degrees,
-        rmse_tr.T,
-        'b',
-        linestyle="-",
-        color=([0.7, 0.7, 1]),
-        label='train',
-        linewidth=0.3)
-    plt.plot(
-        degrees,
-        rmse_te.T,
-        'r',
-        linestyle="-",
-        color=[1, 0.7, 0.7],
-        label='test',
-        linewidth=0.3)
-    plt.plot(
-        degrees,
-        rmse_tr_mean.T,
-        'b',
-        linestyle="-",
-        label='train',
-        linewidth=3)
-    plt.plot(
-        degrees,
-        rmse_te_mean.T,
-        'r',
-        linestyle="-",
-        label='test',
-        linewidth=3)
-    plt.ylim(0, 0.4)
-    plt.xlabel("degree")
-    plt.ylabel("error")
-    plt.title("Bias-Variance Decomposition")
-    plt.savefig("bias_variance")
+    # saving figure into pdf
+    name_file = name + ".pdf"
+    plt.savefig(name_file, bbox_inches='tight')
+    
+    plt.show()
+    
+    return df    
 
 ################################################################################
 # About submission
@@ -384,7 +345,7 @@ def categorical_rep_data(cat_col):
     return cat_col.fillna(v)
 
 def balance(x, y, lower_bound, upper_bound):
-    """Balances data with equal number of occurencies s and b"""
+    """Balances data with equal number of occurencies s and b."""
 
     idx_first = np.nonzero(y == upper_bound)[0]
     idx_second = np.nonzero(y == lower_bound)[0]
@@ -406,14 +367,17 @@ def balance(x, y, lower_bound, upper_bound):
 
     return x.T, y
 
-#create function that transfrom nan into -9999 inverse
-
 def delete_features(tx, threshold):
+    """Deletes the idx from tx which pourcentage of nan is higher than the threshold."""
     idx_to_del = []
     for idx_feature in range(tx.shape[0]):
         if np.isnan(tx[idx_feature]).sum()/tx.shape[1] > threshold:
             idx_to_del.append(idx_feature)
 
+    return np.delete(tx,idx_to_del, axis=0), idx_to_del
+
+def delete_features_from_idx(tx, idx_to_del):
+    """Deletes the idx from tx."""
     return np.delete(tx,idx_to_del, axis=0)
 
 def get_jet_masks(x):
@@ -427,7 +391,3 @@ def get_jet_masks(x):
         2: x[:, 22] == 2,
         3: x[:, 22] == 3
     }
-
-# tentative of doing something
-#def select_corr(y, data, threshold):
-    #data.apply(lambda x: x.corr(y)).sort_values().where(lambda x : abs(x) > 0).dropna().index
