@@ -1,44 +1,37 @@
+"""Models implementation."""
+from helpers import *
+from costs import *
 import numpy as np
-import random
-import matplotlib.pyplot as plt
 
-
-
-################################################################################
-# Asked implementations ########################################################
-################################################################################
 def least_squares_GD(y, tx, initial_w, max_iter, gamma):
-    # Linear regression using gradient descent
+    """Linear regression using gradient descent."""
 
     w = initial_w
     for n_iter in range(max_iter):
-        # compute gradient and loss
-        gradient = compute_gradient(y, tx, w)
 
+        gradient = compute_gradient(y, tx, w)
         loss = compute_loss(y, tx, w)
-        # update w by gradient
         w = w - gamma * gradient
 
     return (w, loss)
 
 def least_squares_SGD(y, tx, initial_w, max_iter, gamma, batch_size=1):
-    # Linear regression using stochastic gradient descent
+    """Linear regression using stochastic gradient descent."""
 
     w = initial_w
     gradient = 0
     for n_iter in range(max_iter):
-        # compute gradient from minibatch
+
         for minibatch_y, minibatch_tx in batch_iter(y, tx.T, batch_size):
             gradient = compute_gradient(minibatch_y, minibatch_tx.T, w)
-        # compute loss
+        
         loss = compute_loss(y, tx, w)
-        # update w by gradient
         w = w - gamma * gradient
 
     return (w, loss)
 
 def least_squares(y, tx):
-    # Least squares regression using normal equations
+    """Least squares regression using normal equations."""
 
     w = np.linalg.solve(tx.dot(tx.T), tx.dot(y))
     loss = compute_loss(y, tx, w)
@@ -46,10 +39,9 @@ def least_squares(y, tx):
     return (w, loss)
 
 def ridge_regression(y, tx, lambda_):
-    # Ridge regression using normal equations
+    """Ridge regression using normal equations."""
 
     (D,N) = tx.shape
-    #print('D: ', D, 'N: ', N)
     tikhonov_matrix = lambda_*2*N * np.identity(D)
     w = np.linalg.solve((tx.dot(tx.T) + tikhonov_matrix), tx.dot(y))
     loss = compute_loss(y, tx, w)
@@ -68,327 +60,3 @@ def logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_=0):
 def reg_logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_):
     """Regularized logistic regression using gradient descent or SGD."""
     return logistic_regression(y, tx, initial_w, max_iter, gamma, lambda_)
-
-################################################################################
-################################################################################
-################################################################################
-
-def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
-    """
-    Generate a minibatch iterator for a dataset.
-    Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
-    Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
-    Data can be randomly shuffled to avoid ordering in the original data messing with the randomness of the minibatches.
-    Example of use :
-    for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
-        <DO-SOMETHING>
-    """
-
-    data_size = len(y)
-
-    if shuffle:
-        shuffle_indices = np.random.permutation(np.arange(data_size))
-        shuffled_y = y[shuffle_indices]
-        shuffled_tx = tx[shuffle_indices]
-    else:
-        shuffled_y = y
-        shuffled_tx = tx
-    for batch_num in range(num_batches):
-        start_index = batch_num * batch_size
-        end_index = min((batch_num + 1) * batch_size, data_size)
-        if start_index != end_index:
-            yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
-
-def compute_gradient(y, tx, w):
-    """Compute the gradient and loss using MSE"""
-
-    N = len(y)
-    e = y - tx.T.dot(w)
-    if np.isnan(e).any():
-        print("e contains NaN")
-        print("e.shape", e.shape)
-        print("tx.T.shape", tx.T.shape)
-        print("w.shape", w.shape)
-        print("y.shape", y.shape)
-        print(e)
-    gradient = -(1/N) * tx.dot(e)
-
-    return gradient
-
-def compute_loss(y, tx, w):
-    """Compute the gradient and loss using MSE."""
-    # N = len(y)
-    #  e = y - tx.T.dot(w)
-    # loss = 1/(2*N) * np.sum(e**2, axis=0)
-    loss = 0
-
-    return loss
-
-def sigmoid(t):
-    """Apply sigmoid function on t."""
-    return 1/(1+np.exp(-t))
-
-def calculate_loss(y, tx, w, lambda_=0):
-    """Compute the cost by negative log likelihood."""
-
-    #print(y.shape, tx.shape, w.shape)
-
-    #  exp_ = np.exp(tx.dot(w))
-    #print("exp_: ", exp_)
-    #  log_ = np.log(1 + exp_)
-    #  y_ = y * tx.dot(w)
-    #sum_test1 = np.sum(log_, axis=0)
-    #sum_test2 = np.sum(y_, axis=0)
-    # sum_ = np.sum(log_ - y_ , axis=0)
-    #  reg_term = (lambda_/2)*np.linalg.norm(w)**2
-
-    #print("\nexp_: ", exp_.max(), "\nlog_: ", log_, "\ny_: ", y_, "\nsum_: ", sum_)
-    #print("exp_: ", exp_)
-
-    #return sum_ + reg_term
-
-    return 0
-
-def calculate_gradient(y, tx, w, lambda_=0):
-    """Compute the gradient of loss."""
-
-    epsilon = 10e-6
-
-    true = tx.dot(sigmoid(tx.T.dot(w)) - y) + lambda_*np.linalg.norm(w)
-    #test = (calculate_loss(y, tx, w + epsilon, 0) - calculate_loss(y, tx, w - epsilon, 0)) / (2*epsilon)
-
-    """print("true: ", true)
-    print("test: ", test)
-    print("true-test: ", np.linalg.norm(true-test))"""
-
-    return true
-
-def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
-    """
-    Do one step of gradient descen using logistic regression.
-    Return the loss and the updated w.
-    """
-
-    loss = calculate_loss(y, tx, w, lambda_)
-    gradient = calculate_gradient(y, tx, w, lambda_)
-    w = w - gamma * gradient
-    #print("loss: ", loss, " gradient: ", np.linalg.norm(gradient), "w: ", w)
-
-    return (w, loss)
-
-def build_poly_feature(x, degree):
-    """Polynomial basis functions for input data x, for j=0 up to j=degree."""
-
-    if x.ndim == 1:
-        x = x[:,np.newaxis]
-
-    polynomial_basis = x**1
-
-    for j in range(2, degree+1):
-        polynomial_basis = np.hstack((polynomial_basis, x**j))
-    return polynomial_basis
-
-def build_poly_tx(tx, degree):
-    
-    x = tx.T
-
-    (N,D) = x.shape
-    x_polynomial = build_poly_feature(x[:,0], degree)
-
-    for c_idx in range(1, D):
-        x_polynomial = np.hstack((x_polynomial, build_poly_feature(x[:,c_idx], degree)))
-    ones = np.ones((N,1))
-    x_polynomial = np.hstack((ones, x_polynomial))
-
-    return x_polynomial.T
-
-def init_w(tx):
-    """Initializes w with random values in [0,1) based on shape of tx."""
-    return np.random.rand(tx.shape[0])[:,np.newaxis]
-
-def accuracy(y, x, w, lower_bound, upper_bound):
-    """Computes the accuracy of the predictions."""
-    return np.mean(y == predict_labels(w, x, lower_bound, upper_bound))
-
-def build_k_indices(y, k_fold, seed):
-    """Builds k indices for k-fold."""
-    num_row = y.shape[0]
-    interval = int(num_row / k_fold)
-    np.random.seed(seed)
-    indices = np.random.permutation(num_row)
-    k_indices = [indices[k * interval: (k + 1) * interval]
-                 for k in range(k_fold)]
-    return np.array(k_indices)
-
-def cross_validation(y, x, initial_w, max_iter, k_indices, k, gamma, lambda_, lower_bound, upper_bound, model="least_squares", batch_size=1):
-    """Returns the loss of logistic regression."""
-    y_test = y[k_indices[k]]
-    x_test = x[k_indices[k]]
-
-    k_indices = np.delete(k_indices, k, 0)
-    k_indices = k_indices.flatten()
-
-    y_train = y[k_indices]
-    x_train = x[k_indices]
-
-    if model == "logistic_regression":
-        (w_tr, loss_tr) = logistic_regression(y_train, x_train.T, initial_w, max_iter, gamma)
-    elif model == "least_squares":
-        (w_tr, loss_tr) = least_squares(y_train, x_train.T)
-    elif model == "ridge_regression":
-        (w_tr, loss_tr) = ridge_regression(y_train, x_train.T, lambda_)
-    elif model == "least_squares_GD":
-        (w_tr, loss_tr) = least_squares_GD(y_train, x_train.T, initial_w, max_iter, gamma)
-    elif model == "least_squares_SGD":
-        (w_tr, loss_tr) = least_squares_SGD(y_train, x_train.T, initial_w, max_iter, gamma, batch_size)
-    elif model == "reg_logistic_regression":
-        (w_tr, loss_tr) = reg_logistic_regression(y_train, x_train.T, initial_w, max_iter, gamma, lambda_)
-    else:
-        raise ValueError("Unknown model: %s" % model)
-
-    acc = accuracy(y_test, x_test, w_tr, lower_bound, upper_bound)
-
-    return w_tr, acc
-
-def predict_labels(weights, data, lower_bound, upper_bound):
-    """Generates class predictions given weights, and a test data matrix"""
-    threshold = (upper_bound + lower_bound)/2
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= threshold)] = lower_bound
-    y_pred[np.where(y_pred > threshold)] = upper_bound
-    return y_pred
-
-
-
-################################################################################
-# About plotting results
-################################################################################
-
-def show_ridge_results(results, len_degrees, name):
-    """Shows the results for different parameters of the ridge regression."""
-    import pandas as pd
-    import matplotlib.ticker as mtick
-
-    df = pd.DataFrame.from_records(results, columns=['degree', 'max_iter', 'batch_size', 'gamma', 'lambda_', 'acc_mean', 'w_mean', 'lambda'])
-    df.plot.hexbin(x='lambda', y='degree', C='acc_mean', gridsize=len_degrees, figsize=(10,6), sharex=False, cmap='cubehelix')
-    plt.xticks(df['lambda'], df['lambda_'].map('{:.5f}'.format), rotation='vertical', fontweight='light') 
-
-    # saving figure into pdf
-    name_file = name + ".pdf"
-    plt.savefig(name_file, bbox_inches='tight')
-    
-    plt.show()
-    
-    return df    
-
-################################################################################
-# About submission
-################################################################################
-
-def create_csv_submission(ids, y_pred, name):
-    """
-    Creates an output file in csv format for submission to kaggle.
-    Arguments: ids (event ids associated with each prediction)
-               y_pred (predicted class labels)
-               name (string name of .csv output file to be created)
-    """
-    with open(name, 'w') as csvfile:
-        fieldnames = ['Id', 'Prediction']
-        writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
-        writer.writeheader()
-        for r1, r2 in zip(ids, y_pred):
-            writer.writerow({'Id':int(r1),'Prediction':int(r2)})
-
-################################################################################
-# About cleaning or preparing the data
-################################################################################
-
-def min_max(tx):
-    """Applies the min-max scaling."""
-    return (tx - np.min(tx, axis=1)[:,np.newaxis]) / (np.max(tx, axis=1)[:,np.newaxis] - np.min(tx, axis=1)[:,np.newaxis])
-
-def standardize(tx):
-    """Standardizes the data."""
-
-    mean = np.nanmean(tx, axis=1)[:,np.newaxis]
-    std = np.nanstd(tx, axis=1)[:,np.newaxis]
-
-    centered_data = tx - mean
-    std_data = centered_data / std
-
-    return mean, std, std_data
-
-def standardize_predef(tx, mean, std):
-    """Standardizes the data."""
-
-    centered_data = tx - mean
-    std_data = centered_data / std
-
-    return std_data
-
-def replace_nan_by_median(data):
-    """Replaces the NaN values with the median of the corresponding feature."""
-    return np.where(np.isnan(data), np.nanmedian(data, axis=1)[:,np.newaxis], data)
-
-def replace_nan_by_mean(data):
-    """Replaces the NaN values with the mean of the corresponding feature."""
-    return np.where(np.isnan(data), np.nanmean(data, axis=1)[:,np.newaxis], data)
-
-def categorical_rep_data(cat_col):
-    """
-    Replaces the NaN values of a categorical feature with the most frequent
-    occurence.
-    """
-    cat_col_wo_nan = cat_col.dropna()
-    v = cat_col_wo_nan.value_counts().idxmax()
-
-    return cat_col.fillna(v)
-
-def balance(x, y, lower_bound, upper_bound):
-    """Balances data with equal number of occurencies s and b."""
-
-    idx_first = np.nonzero(y == upper_bound)[0]
-    idx_second = np.nonzero(y == lower_bound)[0]
-
-    size_first = idx_first.shape[0]
-    size_second = idx_second.shape[0]
-
-    min_ = np.min([size_first, size_second])
-
-    random.shuffle(idx_first)
-    random.shuffle(idx_second)
-
-    idx_list = np.concatenate((idx_first[:min_], idx_second[:min_]), axis=0)
-
-    random.shuffle(idx_list)
-
-    y = y[idx_list,:]
-    x = x[idx_list,:]
-
-    return x.T, y
-
-def delete_features(tx, threshold):
-    """Deletes the idx from tx which pourcentage of nan is higher than the threshold."""
-    idx_to_del = []
-    for idx_feature in range(tx.shape[0]):
-        if np.isnan(tx[idx_feature]).sum()/tx.shape[1] > threshold:
-            idx_to_del.append(idx_feature)
-
-    return np.delete(tx,idx_to_del, axis=0), idx_to_del
-
-def delete_features_from_idx(tx, idx_to_del):
-    """Deletes the idx from tx."""
-    return np.delete(tx,idx_to_del, axis=0)
-
-def get_jet_masks(x):
-    """
-    Returns 4 masks corresponding to the rows of x with a jet value
-    of 0, 1, 2 and 3 respectively.
-    """
-    return {
-        0: x[:, 22] == 0,
-        1: x[:, 22] == 1,
-        2: x[:, 22] == 2,
-        3: x[:, 22] == 3
-        #2: (x[:, 22] == 2) | (x[:, 22] == 3)
-    }

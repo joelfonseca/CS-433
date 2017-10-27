@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-"""some helper functions for project 1."""
+"""Some helper functions for project 1."""
 import csv
 import numpy as np
 
 
 def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
-    """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
+    """Loads data and returns y (class labels), tX (features) and ids (event ids)."""
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
     x = np.genfromtxt(data_path, delimiter=",", skip_header=1, usemask=True, missing_values="-999")
 
-    #print(x.filled(np.nan))
     x = x.filled(np.nan)
 
     ids = x[:, 0].astype(np.int)
@@ -30,7 +28,7 @@ def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
 
 
 def predict_labels_kaggle(weights, data, lower_bound, upper_bound):
-    """Generates class predictions given weights, and a test data matrix"""
+    """Generates class predictions given weights, and a test data matrix."""
     threshold = (upper_bound + lower_bound)/2
     y_pred = np.dot(data, weights)
     y_pred[np.where(y_pred <= threshold)] = -1
