@@ -2,7 +2,7 @@
 import numpy as np
 
 def build_poly_feature(x, degree):
-    """Polynomial basis functions for input data x, for j=0 up to j=degree."""
+    """Polynomial basis for input feature x, for j=0 up to j=degree."""
 
     if x.ndim == 1:
         x = x[:,np.newaxis]
@@ -14,7 +14,7 @@ def build_poly_feature(x, degree):
     return polynomial_basis
 
 def build_poly_tx(tx, degree):
-    
+    """Polynomial basis for input features tx, for j=0 up to j=degree."""
     x = tx.T
 
     (N,D) = x.shape

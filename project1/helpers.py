@@ -4,7 +4,7 @@ import numpy as np
 
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
-    Generate a minibatch iterator for a dataset.
+    Generates a minibatch iterator for a dataset.
     Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
     Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
     Data can be randomly shuffled to avoid ordering in the original data messing with the randomness of the minibatches.
@@ -44,6 +44,10 @@ def compute_gradient(y, tx, w):
 
     return gradient
 
+def sigmoid(t):
+    """Apply sigmoid function on t."""
+    return 1/(1+np.exp(-t))
+
 def calculate_gradient(y, tx, w, lambda_=0):
     """Compute the gradient of loss."""
 
@@ -60,11 +64,11 @@ def calculate_gradient(y, tx, w, lambda_=0):
 
 def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
     """
-    Do one step of gradient descen using logistic regression.
+    Do one step of gradient descent using logistic regression.
     Return the loss and the updated w.
     """
 
-    loss = calculate_loss(y, tx, w, lambda_)
+    loss = compute_log_likelihood(y, tx, w, lambda_)
     gradient = calculate_gradient(y, tx, w, lambda_)
     w = w - gamma * gradient
 
