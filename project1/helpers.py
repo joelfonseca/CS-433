@@ -32,31 +32,17 @@ def compute_gradient(y, tx, w):
     """Compute the gradient and loss using MSE."""
 
     N = len(y)
-    e = y - tx.T.dot(w)
-    if np.isnan(e).any():
-        print("e contains NaN")
-        print("e.shape", e.shape)
-        print("tx.T.shape", tx.T.shape)
-        print("w.shape", w.shape)
-        print("y.shape", y.shape)
-        print(e)
-    gradient = -(1/N) * tx.dot(e)
+    e = y - tx.dot(w)
+    gradient = -(1/N) * tx.T.dot(e)
 
     return gradient
 
 def calculate_gradient(y, tx, w, lambda_=0):
     """Compute the gradient of loss."""
 
-    epsilon = 10e-6
+    gradient = tx.T.dot(sigmoid(tx.dot(w)) - y) + lambda_ * np.linalg.norm(w)
 
-    true = tx.dot(sigmoid(tx.T.dot(w)) - y) + lambda_*np.linalg.norm(w)
-    #test = (calculate_loss(y, tx, w + epsilon, 0) - calculate_loss(y, tx, w - epsilon, 0)) / (2*epsilon)
-
-    """print("true: ", true)
-    print("test: ", test)
-    print("true-test: ", np.linalg.norm(true-test))"""
-
-    return true
+    return gradient
 
 def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
     """
@@ -73,7 +59,7 @@ def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
 
 def init_w(tx):
     """Initializes w with random values in [0,1) based on shape of tx."""
-    return np.random.rand(tx.shape[0])[:,np.newaxis]
+    return np.random.rand(tx.shape[1])
 
 
 def accuracy(y, x, w, lower_bound, upper_bound):
@@ -84,7 +70,7 @@ def accuracy(y, x, w, lower_bound, upper_bound):
 def predict_labels(weights, data, lower_bound, upper_bound):
     """Generates class predictions given weights, and a test data matrix"""
     threshold = (upper_bound + lower_bound)/2
-    y_pred = np.dot(data, weights)
+    y_pred = data.dot(weights)
     y_pred[np.where(y_pred <= threshold)] = lower_bound
     y_pred[np.where(y_pred > threshold)] = upper_bound
     return y_pred

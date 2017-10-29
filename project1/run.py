@@ -63,20 +63,20 @@ y_pred_final = np.zeros(len(y_test))
 for idx in range(len(jet_train_msks)):
 
     # Get split
-    tx_train_selected_jet = x_train[jet_train_msks[idx]].T
-    tx_test_selected_jet = x_test[jet_test_msks[idx]].T
+    tx_train_selected_jet = x_train[jet_train_msks[idx]]
+    tx_test_selected_jet = x_test[jet_test_msks[idx]]
 
     y_train_selected_jet = y_train[jet_train_msks[idx]]
 
     ##### USE THIS IF DOING PREPROCESSING AFTER SPLITTING #####
 
 	# Remove columns full of NaN
-    tx_train_selected_jet = tx_train_selected_jet[~np.all(np.isnan(tx_train_selected_jet), axis=1)]
-    tx_test_selected_jet = tx_test_selected_jet[~np.all(np.isnan(tx_test_selected_jet), axis=1)]
+    tx_train_selected_jet = tx_train_selected_jet[:, ~np.all(np.isnan(tx_train_selected_jet), axis=0)]
+    tx_test_selected_jet = tx_test_selected_jet[:, ~np.all(np.isnan(tx_test_selected_jet), axis=0)]
 
     # Remove columns without standard deviation at all
-    tx_train_selected_jet = tx_train_selected_jet[np.nanstd(tx_train_selected_jet, axis=1) != 0]
-    tx_test_selected_jet = tx_test_selected_jet[np.nanstd(tx_test_selected_jet, axis=1) != 0]
+    tx_train_selected_jet = tx_train_selected_jet[:, np.nanstd(tx_train_selected_jet, axis=0) != 0]
+    tx_test_selected_jet = tx_test_selected_jet[:, np.nanstd(tx_test_selected_jet, axis=0) != 0]
     
     # Replace remaining NaN by median
     tx_train_selected_jet = replace_nan_by_median(tx_train_selected_jet)
@@ -96,11 +96,11 @@ for idx in range(len(jet_train_msks)):
     w_selected_jet, _ = ridge_regression(y_train_selected_jet, tx_train_poly_selected_jet, lambdas[idx])
 
     # Compute accuracy (only used for printing)
-    acc = accuracy(y_train_selected_jet, tx_train_poly_selected_jet.T, w_selected_jet, LOWER_BOUND, UPPER_BOUND)
+    acc = accuracy(y_train_selected_jet, tx_train_poly_selected_jet, w_selected_jet, LOWER_BOUND, UPPER_BOUND)
     print("Accuracy:", acc)
 
     # pred of split + add it to the final pred
-    y_test_pred = predict_labels_kaggle(w_selected_jet, tx_test_poly_selected_jet.T, LOWER_BOUND, UPPER_BOUND)
+    y_test_pred = predict_labels_kaggle(w_selected_jet, tx_test_poly_selected_jet, LOWER_BOUND, UPPER_BOUND)
     y_pred_final[jet_test_msks[idx]] = y_test_pred.flatten()
 
 

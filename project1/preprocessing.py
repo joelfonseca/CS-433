@@ -2,15 +2,11 @@
 import numpy as np
 import random
 
-def min_max(tx):
-    """Applies the min-max scaling."""
-    return (tx - np.min(tx, axis=1)[:,np.newaxis]) / (np.max(tx, axis=1)[:,np.newaxis] - np.min(tx, axis=1)[:,np.newaxis])
-
 def standardize(tx):
     """Standardizes the data."""
 
-    mean = np.nanmean(tx, axis=1)[:,np.newaxis]
-    std = np.nanstd(tx, axis=1)[:,np.newaxis]
+    mean = np.nanmean(tx, axis=0)
+    std = np.nanstd(tx, axis=0)
 
     centered_data = tx - mean
     std_data = centered_data / std
@@ -27,11 +23,11 @@ def standardize_predef(tx, mean, std):
 
 def replace_nan_by_median(data):
     """Replaces the NaN values with the median of the corresponding feature."""
-    return np.where(np.isnan(data), np.nanmedian(data, axis=1)[:,np.newaxis], data)
+    return np.where(np.isnan(data), np.nanmedian(data, axis=0), data)
 
 def replace_nan_by_mean(data):
     """Replaces the NaN values with the mean of the corresponding feature."""
-    return np.where(np.isnan(data), np.nanmean(data, axis=1)[:,np.newaxis], data)
+    return np.where(np.isnan(data), np.nanmean(data, axis=0), data)
 
 def categorical_rep_data(cat_col):
     """
@@ -64,30 +60,28 @@ def balance(x, y, lower_bound, upper_bound):
     y = y[idx_list,:]
     x = x[idx_list,:]
 
-    return x.T, y
+    return x, y
 
 def delete_features(tx, threshold):
     """Deletes the idx from tx which pourcentage of nan is higher than the threshold."""
     idx_to_del = []
-    for idx_feature in range(tx.shape[0]):
-        if np.isnan(tx[idx_feature]).sum()/tx.shape[1] > threshold:
+    for idx_feature in range(tx.shape[1]):
+        if np.isnan(tx[idx_feature]).sum()/tx.shape[0] > threshold:
             idx_to_del.append(idx_feature)
 
-    return np.delete(tx,idx_to_del, axis=0), idx_to_del
+    return np.delete(tx,idx_to_del, axis=1), idx_to_del
 
 def delete_features_from_idx(tx, idx_to_del):
     """Deletes the idx from tx."""
-    return np.delete(tx,idx_to_del, axis=0)
+    return np.delete(tx,idx_to_del, axis=1)
 
 def get_jet_masks(x):
     """
-    Returns 4 masks corresponding to the rows of x with a jet value
-    of 0, 1, 2 and 3 respectively.
+    Returns 4 masks corresponding to the rows of x with jet num 0, 1, 2 and 3.
     """
     return {
         0: x[:, 22] == 0,
         1: x[:, 22] == 1,
         2: x[:, 22] == 2,
         3: x[:, 22] == 3
-        #2: (x[:, 22] == 2) | (x[:, 22] == 3)
     }

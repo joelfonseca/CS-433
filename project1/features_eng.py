@@ -14,15 +14,12 @@ def build_poly_feature(x, degree):
     return polynomial_basis
 
 def build_poly_tx(tx, degree):
-    
-    x = tx.T
-
-    (N,D) = x.shape
-    x_polynomial = build_poly_feature(x[:,0], degree)
+    (N,D) = tx.shape
+    tx_polynomial = build_poly_feature(tx[:,0], degree)
 
     for c_idx in range(1, D):
-        x_polynomial = np.hstack((x_polynomial, build_poly_feature(x[:,c_idx], degree)))
+        tx_polynomial = np.hstack((tx_polynomial, build_poly_feature(tx[:,c_idx], degree)))
     ones = np.ones((N,1))
-    x_polynomial = np.hstack((ones, x_polynomial))
+    tx_polynomial = np.hstack((ones, tx_polynomial))
 
-    return x_polynomial.T
+    return tx_polynomial

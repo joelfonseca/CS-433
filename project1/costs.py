@@ -4,7 +4,7 @@ import numpy as np
 def compute_loss(y, tx, w):
     """Compute the gradient and loss using MSE."""
     N = len(y)
-    e = y - tx.T.dot(w)
+    e = y - tx.dot(w)
     loss = 1/(2*N) * np.sum(e**2, axis=0)
     
     return loss

@@ -22,8 +22,8 @@ def least_squares_SGD(y, tx, initial_w, max_iter, gamma, batch_size=1):
     gradient = 0
     for n_iter in range(max_iter):
 
-        for minibatch_y, minibatch_tx in batch_iter(y, tx.T, batch_size):
-            gradient = compute_gradient(minibatch_y, minibatch_tx.T, w)
+        for minibatch_y, minibatch_tx in batch_iter(y, tx, batch_size):
+            gradient = compute_gradient(minibatch_y, minibatch_tx, w)
         
         loss = compute_loss(y, tx, w)
         w = w - gamma * gradient
@@ -33,7 +33,7 @@ def least_squares_SGD(y, tx, initial_w, max_iter, gamma, batch_size=1):
 def least_squares(y, tx):
     """Least squares regression using normal equations."""
 
-    w = np.linalg.solve(tx.dot(tx.T), tx.dot(y))
+    w = np.linalg.solve(tx.T.dot(tx), tx.dot(y))
     loss = compute_loss(y, tx, w)
 
     return (w, loss)
@@ -41,9 +41,9 @@ def least_squares(y, tx):
 def ridge_regression(y, tx, lambda_):
     """Ridge regression using normal equations."""
 
-    (D,N) = tx.shape
+    (N,D) = tx.shape
     tikhonov_matrix = lambda_*2*N * np.identity(D)
-    w = np.linalg.solve((tx.dot(tx.T) + tikhonov_matrix), tx.dot(y))
+    w = np.linalg.solve((tx.T.dot(tx) + tikhonov_matrix), tx.T.dot(y))
     loss = compute_loss(y, tx, w)
 
     return (w, loss)
