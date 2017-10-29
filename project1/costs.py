@@ -1,7 +1,7 @@
 """Compute the loss for different models."""
 import numpy as np
 
-def compute_mse_loss(y, tx, w):
+def compute_mse(y, tx, w):
     """Compute the gradient and loss using MSE."""
     N = len(y)
     e = y - tx.T.dot(w)
@@ -9,7 +9,7 @@ def compute_mse_loss(y, tx, w):
     
     return loss
 
-def compute_log_likelihood(y, tx, w, lambda_=0):
+def compute_neg_log_likelihood(y, tx, w, lambda_=0):
     """Compute the cost by negative log likelihood."""
 
     exp_ = np.exp(tx.dot(w))

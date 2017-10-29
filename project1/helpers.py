@@ -68,7 +68,7 @@ def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
     Return the loss and the updated w.
     """
 
-    loss = compute_log_likelihood(y, tx, w, lambda_)
+    loss = compute_neg_log_likelihood(y, tx, w, lambda_)
     gradient = calculate_gradient(y, tx, w, lambda_)
     w = w - gamma * gradient
 
