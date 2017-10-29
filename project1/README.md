@@ -1,24 +1,24 @@
 # CS-433 Machine Learning - Project 1
 
-## The first project developed for the Machine Learning course, was about predicting from a data set wether a particle was a Higgs Boson based on thirty features. The project was run like a Kaggle Competition.
+### The first project developed for the Machine Learning course, was about predicting from a data set wether a particle was a Higgs Boson based on thirty features. The project was run like a Kaggle Competition.
 
-### The content of this project is composed of different parts:
+The content of this project is composed of different parts:
 
-### - the folder `competition-data` contains all the data needed for the project. It is composed of three files:
+- the folder `competition-data` contains all the data needed for the project. It is composed of three files:
 
    - `sample-submission.csv`: this shows the format in which you have to present your predictions.
    - `test.csv`: the data set used to make predictions from the model.
    - `train.csv`: the data set used for training the model.
 
-### - the folder `report` contains three items:
+- the folder `report` contains three items:
 
    - `report.tex`: the report in LaTeX format.
    - `report.pdf`: the report in PDF format.
    - `figures`: this folder contains all the figures used in the report.
 
-### - the `project1.ipynb` notebook used for the development of this project.
+- the `project1.ipynb` notebook used for the development of this project.
 
-### - several `.py` files:
+- several `.py` files:
 
    - **`costs.py`**: contains all the necessary functions to compute the loss of different models.
       - `compute_mse`: computes the cost using MSE.
