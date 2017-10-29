@@ -35,6 +35,7 @@ x_test = np.hstack((x_test, x_test_inv_log_cols))
 
 # Masks creation
 jet_train_msks = get_jet_masks(x_train)
+
 jet_test_msks = get_jet_masks(x_test)
 
 '''
@@ -52,8 +53,8 @@ x_test = standardize_predef(x_test.T, mean_train, std_train).T
 '''
 
 # Degrees/lambda for each split of the dataset
-degrees = [11, 12, 10, 10]
-lambdas = [0.00003, 0.003, 0.003, 0.001]
+degrees = [10, 12, 10, 10]
+lambdas = [0.0001, 0.003, 0.003, 0.001]
 
 # Creation of vector that will contain the predictions of the different splits
 y_pred_final = np.zeros(len(y_test))
