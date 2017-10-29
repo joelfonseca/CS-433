@@ -25,16 +25,6 @@ def replace_nan_by_median(data):
     """Replaces the NaN values with the median of the corresponding feature."""
     return np.where(np.isnan(data), np.nanmedian(data, axis=0), data)
 
-def categorical_rep_data(cat_col):
-    """
-    Replaces the NaN values of a categorical feature with the most frequent
-    occurence.
-    """
-    cat_col_wo_nan = cat_col.dropna()
-    v = cat_col_wo_nan.value_counts().idxmax()
-
-    return cat_col.fillna(v)
-
 def get_jet_masks(x):
     """
     Returns 4 masks corresponding to the rows of x with jet num 0, 1, 2 and 3.

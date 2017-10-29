@@ -26,6 +26,7 @@ The content of this project is composed of different parts:
 
    - **`cross_validation.py`**: contains all the necessary functions to perfom a cross validation.
       - `cross_validation`: performs cross validation based on given model.
+      - `cross_validation_demo`: call 'cross_validation' with ranges of parameters to get the best combination.
       - `build_k_indices`: builds k indices for k-fold cross validation.
 
    - **`features_eng.py`**: contains features engineering functions used.
@@ -36,11 +37,10 @@ The content of this project is composed of different parts:
       - `batch_iter`: generates a minibatch iterator for a dataset.
       - `compute_gradient`: computes gradient for gradient descent and stochastic gradient descent.
       - `sigmoid`: sigmoid function.
-      - `calculate_gradient`: computes gradient for logistic regression.
+      - `compute_gradient_sigmoid`: computes gradient for logistic regression.
       - `learning_by_gradient_descent`: does one step of gradient descent using logistic regression.
       - `init_w`: initializes the weight vector.
       - `accuracy`: computes the accuracy of the predictions.
-      - `predict_labels`: predicts labels based on data matrix and weight vector.
 
    - **`implementations.py`**: contains all regression methods used for this project.
       - `least_squares_GD`: linear regression using gradient descent.
@@ -54,20 +54,14 @@ The content of this project is composed of different parts:
       - `show_ridge_results`: shows the accuracy of the ridge regression model.
 
    - **`preprocessing.py`**: contains functions developed for preprocessing the data.
-      - `min_max`: applies the min-max scaling.
       - `standardize`: standardizes the data.
       - `standardize_predef`: standardizes the date based on specific *mean* and *std*.
       - `replace_nan_by_median`: replaces the *NaN* values with the median of the corresponding feature.
-      - `replace_nan_by_mean`: replaces the *NaN* values with the mean of the corresponding feature.
-      - `categorical_rep_data`: replaces the *NaN* values of a categorical feature with the most frequent occurence.
-      - `balance`: balances data with equal number of occurencies *s* and *b*.
-      - `delete_features`: deletes features which pourcentage of *NaN* is higher than a specific threshold.
-      - `delete_features_from_idx`: delete features based on an index.
       - `get_jet_masks`: returns four masks corresponding to the jet value of 0, 1, 2 and 3 respectively.
 
    - **`proj1_helpers.py`**: predefined help functions for the project slightly modified.
       - `load_csv_data`: loads the data from CSV.
-      - `predict_labels_kaggle`: predicts label based on data matrix and weight vector compatible with Kaggle.
+      - `predict_labels`: predicts label based on data matrix and weight vector compatible with Kaggle.
       - `create_csv_submission`: creates CSV file for submission.
 
    - **`run.py`**: contains the procedure that generates the exact CSV file submitted on Kaggle.
