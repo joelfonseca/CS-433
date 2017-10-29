@@ -63,7 +63,7 @@ def balance(x, y, lower_bound, upper_bound):
     return x, y
 
 def delete_features(tx, threshold):
-    """Deletes the idx from tx which pourcentage of nan is higher than the threshold."""
+    """Deletes the idx from tx which pourcentage of NaN is higher than the threshold."""
     idx_to_del = []
     for idx_feature in range(tx.shape[1]):
         if np.isnan(tx[idx_feature]).sum()/tx.shape[0] > threshold:
