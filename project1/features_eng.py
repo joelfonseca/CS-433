@@ -15,6 +15,7 @@ def build_poly_feature(x, degree):
 
 def build_poly_tx(tx, degree):
     """Polynomial basis for input features tx, for j=0 up to j=degree."""
+    
     (N,D) = tx.shape
     tx_polynomial = build_poly_feature(tx[:,0], degree)
 

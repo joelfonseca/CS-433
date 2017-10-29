@@ -1,5 +1,6 @@
 """Some helper functions."""
 from costs import *
+from proj1_helpers import *
 import numpy as np
 
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
@@ -41,7 +42,7 @@ def sigmoid(t):
     """Apply sigmoid function on t."""
     return 1/(1+np.exp(-t))
 
-def calculate_gradient(y, tx, w, lambda_=0):
+def compute_gradient_sigmoid(y, tx, w, lambda_=0):
     """Compute the gradient of loss."""
 
     gradient = tx.T.dot(sigmoid(tx.dot(w)) - y) + lambda_ * np.linalg.norm(w)
@@ -55,26 +56,16 @@ def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
     """
 
     loss = compute_log_likelihood(y, tx, w, lambda_)
-    gradient = calculate_gradient(y, tx, w, lambda_)
+    gradient = compute_gradient_sigmoid(y, tx, w, lambda_)
     w = w - gamma * gradient
 
     return (w, loss)
 
-
-def init_w(tx):
+def init_w(tx, seed=1):
     """Initializes w with random values in [0,1) based on shape of tx."""
+    np.random.seed(seed)
     return np.random.rand(tx.shape[1])
-
 
 def accuracy(y, x, w, lower_bound, upper_bound):
     """Computes the accuracy of the predictions."""
     return np.mean(y == predict_labels(w, x, lower_bound, upper_bound))
-
-
-def predict_labels(weights, data, lower_bound, upper_bound):
-    """Generates class predictions given weights, and a test data matrix"""
-    threshold = (upper_bound + lower_bound)/2
-    y_pred = data.dot(weights)
-    y_pred[np.where(y_pred <= threshold)] = lower_bound
-    y_pred[np.where(y_pred > threshold)] = upper_bound
-    return y_pred

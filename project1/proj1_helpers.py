@@ -2,8 +2,7 @@
 import csv
 import numpy as np
 
-
-def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
+def load_csv_data(data_path, lower_bound=-1, upper_bound=1, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)."""
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
     x = np.genfromtxt(data_path, delimiter=",", skip_header=1, usemask=True, missing_values="-999")
@@ -18,6 +17,7 @@ def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
     yb[np.where(y=='s')] = upper_bound
     yb[np.where(y=='b')] = lower_bound
     yb = yb[:,np.newaxis]
+
     # sub-sample
     if sub_sample:
         yb = yb[::50]
@@ -27,14 +27,13 @@ def load_csv_data(data_path, lower_bound, upper_bound, sub_sample=False):
     return yb, input_data, ids
 
 
-def predict_labels_kaggle(weights, data, lower_bound, upper_bound):
+def predict_labels(weights, data, lower_bound=-1, upper_bound=1):
     """Generates class predictions given weights, and a test data matrix."""
     threshold = (upper_bound + lower_bound)/2
     y_pred = np.dot(data, weights)
     y_pred[np.where(y_pred <= threshold)] = -1
     y_pred[np.where(y_pred > threshold)] = 1
     return y_pred
-
 
 def create_csv_submission(ids, y_pred, name):
     """
