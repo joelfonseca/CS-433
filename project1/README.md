@@ -32,6 +32,7 @@ The content of this project is composed of different parts:
    - **`features_eng.py`**: contains features engineering functions used.
       - `build_poly_feature`: builds the polynomial expansion for a feature. 
       - `build_poly_tx`: builds the polynomial expansion for a set of features.
+      - `build_inv_log_x`: creates inverse log values of features passed in argument which are positive in value.
 
    - **`helpers.py`**: contains help functions.
       - `batch_iter`: generates a minibatch iterator for a dataset.

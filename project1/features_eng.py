@@ -25,3 +25,11 @@ def build_poly_tx(tx, degree):
     tx_polynomial = np.hstack((ones, tx_polynomial))
 
     return tx_polynomial
+
+def build_inv_log_x(x, inv_log_cols):
+    """Creates inverse log values of features passed in argument which are positive in value."""
+    
+    x_inv_log_cols = np.log(1 / (1 + x[:, inv_log_cols]))
+    x = np.hstack((x, x_inv_log_cols))
+
+    return x

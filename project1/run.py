@@ -1,5 +1,5 @@
 """ Pyhton file to get the submission used on Kaggle.
-Authors: Fonseca Joël, Moullet Valentin, Laville Quentin
+Authors: M. Fonseca Joël, Moullet Valentin, Laville Quentin
 """
 
 # Imports
@@ -32,10 +32,8 @@ print('Adding features...')
 
 # Create inverse log values of features which are positive in value.
 inv_log_cols = [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 16, 19, 21, 23, 26]
-x_train_inv_log_cols = np.log(1 / (1 + x_train[:, inv_log_cols]))
-x_test_inv_log_cols = np.log(1 / (1 + x_test[:, inv_log_cols]))
-x_train = np.hstack((x_train, x_train_inv_log_cols))
-x_test = np.hstack((x_test, x_test_inv_log_cols))
+x_train = build_inv_log_x(x_train, inv_log_cols)
+x_test = build_inv_log_x(x_test, inv_log_cols)
 
 # Masks creation
 masks_jet_train = get_jet_masks(x_train)

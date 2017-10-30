@@ -34,7 +34,7 @@ def cross_validation(y, x, initial_w, max_iter, k_indices, k, gamma, lambda_, lo
     return w_tr, acc
 
 def cross_validation_demo(y, tx, model="least_squares", degrees=[1], lambdas=[0], gammas=[0], max_iters=[50], k_fold=10, lower_bound=-1, upper_bound=1):
-    """Does a cross-validation with the given parameters on the given model."""
+    """Does a cross validation with the given parameters on the given model."""
 
     k_indices = build_k_indices(y, k_fold)
     results = []
