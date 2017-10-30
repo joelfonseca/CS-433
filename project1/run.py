@@ -1,4 +1,4 @@
-""" Pyhton file to get the submission used on Kaggle
+""" Pyhton file to get the submission used on Kaggle.
 Authors: Fonseca Joël, Moullet Valentin, Laville Quentin
 """
 

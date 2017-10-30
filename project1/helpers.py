@@ -30,7 +30,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
 def compute_gradient(y, tx, w):
-    """Compute the gradient and loss using MSE."""
+    """Computes the gradient and loss using MSE."""
 
     N = len(y)
     e = y - tx.dot(w)
@@ -39,11 +39,11 @@ def compute_gradient(y, tx, w):
     return gradient
 
 def sigmoid(t):
-    """Apply sigmoid function on t."""
+    """Applies sigmoid function on t."""
     return 1/(1+np.exp(-t))
 
 def compute_gradient_sigmoid(y, tx, w, lambda_=0):
-    """Compute the gradient of loss."""
+    """Computes the gradient of loss."""
 
     gradient = tx.T.dot(sigmoid(tx.dot(w)) - y) + lambda_ * np.linalg.norm(w)
 
@@ -51,11 +51,11 @@ def compute_gradient_sigmoid(y, tx, w, lambda_=0):
 
 def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
     """
-    Do one step of gradient descent using logistic regression.
+    Does one step of gradient descent using logistic regression.
     Return the loss and the updated w.
     """
 
-    loss = compute_log_likelihood(y, tx, w, lambda_)
+    loss = compute_neg_log_likelihood(y, tx, w, lambda_)
     gradient = compute_gradient_sigmoid(y, tx, w, lambda_)
     w = w - gamma * gradient
 

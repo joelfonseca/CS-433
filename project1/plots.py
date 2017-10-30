@@ -1,4 +1,4 @@
-"""Plot peformance results.""" 
+"""Plots peformance results.""" 
 import seaborn as sns
 import matplotlib.pyplot as plt
 
