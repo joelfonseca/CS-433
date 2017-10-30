@@ -54,7 +54,8 @@ def cross_validation_demo(y, tx, model="least_squares", degrees=[1], lambdas=[0]
 
                     w_mean = np.mean(ws, axis=0)
                     acc_mean = np.mean(accs)
-                    results.append((degree, max_iter, gamma, lambda_, acc_mean, w_mean))
+                    acc_std = np.std(accs)
+                    results.append((degree, max_iter, gamma, lambda_, acc_mean, acc_std, w_mean))
 
                     print("Finished: " + str((degree, max_iter, gamma, lambda_, acc_mean)))
     
