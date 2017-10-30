@@ -1,6 +1,6 @@
 # CS-433 Machine Learning - Project 1
 
-### The first project developed for the Machine Learning course, was about predicting from a data set wether a particle was a Higgs Boson based on thirty features. The project was run like a Kaggle Competition.
+The first project developed for the Machine Learning course, was about predicting from a data set wether a particle was a Higgs Boson based on thirty features. The project was run like a Kaggle Competition.
 
 The content of this project is composed of different parts:
 
@@ -52,7 +52,8 @@ The content of this project is composed of different parts:
       - `reg_logistic_regression`: regularized logistic regression using gradient descent.
 
    - **`plots.py`**: contains a function that plots the performance of specific model.
-      - `show_ridge_results`: shows the accuracy of the ridge regression model.
+      - `show_ridge_performance`: shows the accuracy of the ridge regression model.
+      - `show_logistic_performance`: shows the accuracy of the logistic regression model.
 
    - **`preprocessing.py`**: contains functions developed for preprocessing the data.
       - `standardize`: standardizes the data.
