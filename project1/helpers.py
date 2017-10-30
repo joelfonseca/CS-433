@@ -64,7 +64,7 @@ def learning_by_gradient_descent(y, tx, w, gamma, lambda_=0):
 def init_w(tx, seed=1):
     """Initializes w with random values in [0,1) based on shape of tx."""
     np.random.seed(seed)
-    return np.random.rand(tx.shape[1])
+    return np.random.rand(tx.shape[1])[:,np.newaxis]
 
 def accuracy(y, x, w, lower_bound, upper_bound):
     """Computes the accuracy of the predictions."""
