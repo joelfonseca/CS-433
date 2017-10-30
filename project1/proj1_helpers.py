@@ -31,8 +31,8 @@ def predict_labels(weights, data, lower_bound=-1, upper_bound=1):
     """Generates class predictions given weights, and a test data matrix."""
     threshold = (upper_bound + lower_bound)/2
     y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= threshold)] = -1
-    y_pred[np.where(y_pred > threshold)] = 1
+    y_pred[np.where(y_pred <= threshold)] = lower_bound
+    y_pred[np.where(y_pred > threshold)] = upper_bound
     return y_pred
 
 def create_csv_submission(ids, y_pred, name):
