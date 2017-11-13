@@ -241,7 +241,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
     # The variables below hold all the trainable weights. They are passed an
     # initial value which will be assigned when when we call:
-    # {tf.initialize_all_variables().run()}
+    # {tf.global_variables_initializer().run()}
     conv1_weights = tf.Variable(
         tf.truncated_normal([5, 5, NUM_CHANNELS, 32],  # 5x5 filter, depth 32.
                             stddev=0.1,
@@ -447,7 +447,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         else:
             # Run all the initializers to prepare the trainable parameters.
-            tf.initialize_all_variables().run()
+            tf.global_variables_initializer().run()
 
             # Build the summary operation based on the TF collection of Summaries.
             summary_op = tf.summary.merge_all()
