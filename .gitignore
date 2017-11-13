@@ -1,7 +1,8 @@
-project2/data
 *.aux
 *.log
 *.out
 *.csv
 *.pyc
 project1/.ipynb_checkpoints/project1-checkpoint.ipynb
+project2/data
+project2/predictions_training
