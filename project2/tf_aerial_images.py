@@ -24,7 +24,7 @@ import tensorflow as tf
 NUM_CHANNELS = 3 # RGB images
 PIXEL_DEPTH = 255
 NUM_LABELS = 2
-TRAINING_SIZE = 20
+TRAINING_SIZE = 100
 VALIDATION_SIZE = 5  # Size of the validation set.
 SEED = 66478  # Set to None for random seed.
 BATCH_SIZE = 16 # 64
@@ -309,6 +309,39 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         return cimg
 
+
+    def concatenate_images2(gt_img):
+        nChannels = len(gt_img.shape)
+        w = gt_img.shape[0]
+        h = gt_img.shape[1]
+        print(w , h)
+        if nChannels == 3:
+            cimg = numpy.concatenate((gt_img), axis=1)
+        else:
+            gt_img_3c = numpy.zeros((w, h, 3), dtype=numpy.uint8)
+            gt_img8 = img_float_to_uint8(gt_img)          
+            gt_img_3c[:,:,0] = gt_img8
+            gt_img_3c[:,:,1] = gt_img8
+            gt_img_3c[:,:,2] = gt_img8
+            cimg = numpy.concatenate((gt_img8), axis=1)
+            print(cimg.shape[1])
+        return cimg
+
+
+   # Get a concatenation of the prediction and groundtruth for given input file
+    def get_prediction_groundtruth(foldername, image_idx):
+
+
+        image_filename = foldername + "test_%d/test_%d.png" % (image_idx,image_idx)
+        img = mpimg.imread(image_filename)
+
+        img_prediction = get_prediction(img)     
+
+        gt_img8 = img_float_to_uint8(img_prediction)          
+  
+
+        return gt_img8
+
     # Get prediction overlaid on the original image for given input file
     def get_prediction_with_overlay(filename, image_idx):
 
@@ -447,7 +480,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         else:
             # Run all the initializers to prepare the trainable parameters.
-            tf.initialize_all_variables().run()
+            tf.global_variables_initializer().run()
 
             # Build the summary operation based on the TF collection of Summaries.
             summary_op = tf.summary.merge_all()
@@ -505,7 +538,7 @@ def main(argv=None):  # pylint: disable=unused-argument
                 save_path = saver.save(s, FLAGS.train_dir + "/model.ckpt")
                 print("Model saved in file: %s" % save_path)
 
-
+        '''
         print ("Running prediction on training set")
         prediction_training_dir = "predictions_training/"
         if not os.path.isdir(prediction_training_dir):
@@ -514,7 +547,19 @@ def main(argv=None):  # pylint: disable=unused-argument
             pimg = get_prediction_with_groundtruth(train_data_filename, i)
             Image.fromarray(pimg).save(prediction_training_dir + "prediction_" + str(i) + ".png")
             oimg = get_prediction_with_overlay(train_data_filename, i)
-            oimg.save(prediction_training_dir + "overlay_" + str(i) + ".png")       
+            oimg.save(prediction_training_dir + "overlay_" + str(i) + ".png")      
+        '''
+
+        print ("Running prediction on test set")
+        prediction_test_dir = "predictions_test/"
+        TEST_SIZE = 50
+        if not os.path.isdir(prediction_test_dir):
+            os.mkdir(prediction_test_dir)
+        for i in range(1, TEST_SIZE+1):
+            pimg = get_prediction_groundtruth("data/test_set_images/", i)
+            Image.fromarray(pimg).save(prediction_test_dir + "prediction_" + str(i) + ".png")
+           # oimg = get_prediction_with_overlay(train_data_filename, i)
+           # oimg.save(prediction_test_dir + "overlay_" + str(i) + ".png")  
 
 if __name__ == '__main__':
     tf.app.run()
