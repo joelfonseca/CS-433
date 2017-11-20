@@ -87,9 +87,9 @@ def value_to_class(v):
     foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
     df = numpy.sum(v)
     if df > foreground_threshold:
-        return [0, 1]
-    else:
         return [1, 0]
+    else:
+        return [0, 1]
 
 # Extract label images
 def extract_labels(filename, num_images):
@@ -309,37 +309,16 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         return cimg
 
-
-    def concatenate_images2(gt_img):
-        nChannels = len(gt_img.shape)
-        w = gt_img.shape[0]
-        h = gt_img.shape[1]
-        print(w , h)
-        if nChannels == 3:
-            cimg = numpy.concatenate((gt_img), axis=1)
-        else:
-            gt_img_3c = numpy.zeros((w, h, 3), dtype=numpy.uint8)
-            gt_img8 = img_float_to_uint8(gt_img)          
-            gt_img_3c[:,:,0] = gt_img8
-            gt_img_3c[:,:,1] = gt_img8
-            gt_img_3c[:,:,2] = gt_img8
-            cimg = numpy.concatenate((gt_img8), axis=1)
-            print(cimg.shape[1])
-        return cimg
-
-
    # Get a concatenation of the prediction and groundtruth for given input file
     def get_prediction_groundtruth(foldername, image_idx):
 
 
-        image_filename = foldername + "test_%d/test_%d.png" % (image_idx,image_idx)
+        image_filename = foldername + "test_%d/test_%d.png" % (image_idx, image_idx)
         img = mpimg.imread(image_filename)
 
         img_prediction = get_prediction(img)     
-
         gt_img8 = img_float_to_uint8(img_prediction)          
   
-
         return gt_img8
 
     # Get prediction overlaid on the original image for given input file
