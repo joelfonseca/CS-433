@@ -4,11 +4,17 @@ from matplotlib.pyplot import imshow
 import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
+import torch.nn.functional as F
 from tqdm import tqdm
+
+from sklearn.metrics import accuracy_score
 
 from loader import TrainingSet, TestSet
 from parameters import BATCH_SIZE, NB_EPOCHS
 from model import CNN, DummyCNN
+
+from functools import reduce
+import itertools
 
 # NOT FINISHED
 def prediction_to_np_patched(img):
@@ -22,7 +28,7 @@ def prediction_to_np_patched(img):
 	print(new_img.shape)
 
 	# To define
-	threshold = -64
+	threshold = 0
 
 	for h in range(height):
 		for w in range(width):
@@ -65,13 +71,42 @@ model = CNN()
 
 print("Training...")
 
+data_size = sum(1 for _ in train_loader)
+print("Data size = %d" % data_size)
+
 for epoch in tqdm(range(NB_EPOCHS)):
 	loss = 0
+
+	# Storing tuples of (validation_data, validation_target) for validation part
+	validation_info = []
+
 	for i, (data, target) in tqdm(enumerate(train_loader)):
 		data, target = Variable(data), Variable(target)
-		loss += model.step(data, target)
-	loss /= i+1
-	print("Mean of loss at epoch %d = %f" % (epoch, loss))
+		if i >= data_size // 10:
+			loss += model.step(data, target)
+		else:
+			validation_info.append((data, target))
+
+	# Cross-validating: TODO
+	'''
+	accs = []
+	for validation_data, validation_target in validation_info:
+		y_pred = model.predict(validation_data)
+		
+		# Need to call 'prediction_to_np_patched' on every pred
+
+
+		print(y_pred[0].size())
+
+
+		print(validation_target.size())
+		acc = accuracy_score(validation_target.data.view(-1).numpy(), y_pred.data.view(-1).numpy())
+		accs.append(acc)
+
+	print("Accuracy = %f" % torch.mean(accs))
+	'''
+
+	print("Loss at epoch %d = %f" % (epoch, loss / (i+1)))
 
 print("Training done.")
 
@@ -84,7 +119,7 @@ print("Applying model on test set and predicting...")
 lines = []
 for i, (data, _) in tqdm(enumerate(test_loader)):
 	# prediction is (1x1x608*608)
-	prediction = model(Variable(data))
+	prediction = model.predict(Variable(data))
 
 	# By squeezing prediction, it becomes (608x608), and we
 	# get kaggle pred which is also (608*608) but black/white by patch

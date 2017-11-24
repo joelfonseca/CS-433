@@ -22,6 +22,9 @@ class TrainingSet(data.Dataset):
 
         self.X = torch.cat([img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)])
         self.Y = torch.cat([img_crop(transforms.ToTensor()(Image.open(label)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)])
+        
+        # Need to round because groundtruth not binary (some values between 0 and 1)
+        self.Y = torch.round(self.Y)
 
         '''
         for i, square in enumerate(self.X):
@@ -29,12 +32,13 @@ class TrainingSet(data.Dataset):
             imshow(square.permute(1, 2, 0).numpy())
             plt.show()
 
+            print(torch.max(self.Y[i]))
+            print(torch.min(self.Y[i]))
             print(self.Y[i].size())
             imshow(self.Y[i].squeeze().numpy())
             plt.show()
             break
         '''
-
     
     def __len__(self):
         return len(self.X)

@@ -72,6 +72,10 @@ class CNN(nn.Module):
 
 		return loss.data[0]
 
+	# predict is doing 'sigmoid' because we are using BCEWithLogitsLoss as a loss_function
+	def predict(self, input):
+		return F.sigmoid(self.forward(input))
+
 class DummyCNN(nn.Module):
 	def __init__(self):
 		super(DummyCNN, self).__init__()
@@ -125,3 +129,7 @@ class DummyCNN(nn.Module):
 		self.optimizer.step()
 
 		return loss.data[0]
+
+	# predict is doing 'sigmoid' because we are using BCEWithLogitsLoss as a loss_function
+	def predict(self, input):
+		return F.sigmoid(self.forward(input))
