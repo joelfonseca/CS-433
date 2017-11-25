@@ -19,7 +19,6 @@ from utils import prediction_to_np_patched, patched_to_submission_lines, concate
 PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
 
-CUDA = True
 '''
 to load a model :
 
@@ -27,8 +26,8 @@ the_model = TheModelClass(*args, **kwargs)
 the_model.load_state_dict(torch.load(PATH))
 '''
 
-#SAVED_MODEL = ""
-SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_100_100_55_0.0819"
+SAVED_MODEL = ""
+#SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_100_100_55_0.0819"
 
 ########## Train our model ##########
 
@@ -50,6 +49,15 @@ if __name__ == '__main__':
 		last_loss = 0
 		step_worse = 0
 		r = 0
+
+		both = []
+		for (data, target) in train_loader:
+
+			if CUDA:
+				both.append((Variable(data).cuda(), Variable(target).cuda()))
+			else:
+				both.append((Variable(data), Variable(target)))
+
 		for epoch in tqdm(range(NB_EPOCHS)):
 			last_loss = loss
 			loss = 0
@@ -57,13 +65,8 @@ if __name__ == '__main__':
 			# Storing tuples of (validation_data, validation_target) for validation part
 			validation_info = []
 
-			for i, (data, target) in tqdm(enumerate(train_loader)):
+			for i, (data, target) in tqdm(enumerate(both)):
 				
-				if CUDA:
-					data, target = Variable(data).cuda(), Variable(target).cuda()
-				else:
-					data, target = Variable(data), Variable(target)
-
 				loss += model.step(data, target)
 				'''
 				if i >= data_size // 10:
