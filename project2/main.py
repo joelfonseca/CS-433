@@ -20,78 +20,98 @@ PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
 
 CUDA = True
+'''
+to load a model :
+
+the_model = TheModelClass(*args, **kwargs)
+the_model.load_state_dict(torch.load(PATH))
+'''
+
+#SAVED_MODEL = ""
+SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_100_100_55_0.0819"
 
 ########## Train our model ##########
 
 if __name__ == '__main__':
-	train_loader = DataLoader(TrainingSet(), num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
+
 	model = CompleteCNN()
 
-	if CUDA:
-		model.cuda()
+	if SAVED_MODEL == "":
+		train_loader = DataLoader(TrainingSet(), num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
 
-	print("Training...")
+		if CUDA:
+			model.cuda()
 
-	#data_size = sum(1 for _ in train_loader)
+		print("Training...")
 
-	loss = 1E9
-	last_loss = 0
-	step_worse = 0
-	for epoch in tqdm(range(NB_EPOCHS)):
-		last_loss = loss
-		loss = 0
+		#data_size = sum(1 for _ in train_loader)
 
-		# Storing tuples of (validation_data, validation_target) for validation part
-		validation_info = []
+		loss = 1E9
+		last_loss = 0
+		step_worse = 0
+		r = 0
+		for epoch in tqdm(range(NB_EPOCHS)):
+			last_loss = loss
+			loss = 0
 
-		for i, (data, target) in tqdm(enumerate(train_loader)):
-			
-			if CUDA:
-				data, target = Variable(data).cuda(), Variable(target).cuda()
-			else:
-				data, target = Variable(data), Variable(target)
+			# Storing tuples of (validation_data, validation_target) for validation part
+			validation_info = []
 
-			loss += model.step(data, target)
-			'''
-			if i >= data_size // 10:
+			for i, (data, target) in tqdm(enumerate(train_loader)):
+				
+				if CUDA:
+					data, target = Variable(data).cuda(), Variable(target).cuda()
+				else:
+					data, target = Variable(data), Variable(target)
+
 				loss += model.step(data, target)
-			else:
-				validation_info.append((data, target))
+				'''
+				if i >= data_size // 10:
+					loss += model.step(data, target)
+				else:
+					validation_info.append((data, target))
+				'''
+
+			# Cross-validating: TODO
+			'''
+			accs = []
+			for validation_data, validation_target in validation_info:
+				y_pred = model.predict(validation_data)
+				
+				# Need to call 'prediction_to_np_patched' on every pred
+
+
+				print(y_pred[0].size())
+
+
+				print(validation_target.size())
+				acc = accuracy_score(validation_target.data.view(-1).numpy(), y_pred.data.view(-1).numpy())
+				accs.append(acc)
+
+			print("Accuracy = %f" % torch.mean(accs))
 			'''
 
-		# Cross-validating: TODO
-		'''
-		accs = []
-		for validation_data, validation_target in validation_info:
-			y_pred = model.predict(validation_data)
-			
-			# Need to call 'prediction_to_np_patched' on every pred
+			print("Loss at epoch %d = %f" % (epoch, loss / (i+1)))
 
+			r = r + 1
+			if r % 5 == 0:
+				model_name = "model_CompleteCNN_{}_{}_{}_{:.4f}".format(BATCH_SIZE, NB_EPOCHS, r, (loss / (i+1)))
+				torch.save(model, SAVED_MODEL_DIR + model_name)
 
-			print(y_pred[0].size())
+			if last_loss < loss:
+				step_worse = step_worse + 1
+				if step_worse == 3:
+					print("BREAK")
+					break
+			else:
+				step_worse = 0
 
+		print("Training done.")
 
-			print(validation_target.size())
-			acc = accuracy_score(validation_target.data.view(-1).numpy(), y_pred.data.view(-1).numpy())
-			accs.append(acc)
+	else:
 
-		print("Accuracy = %f" % torch.mean(accs))
-		'''
-
-		print("Loss at epoch %d = %f" % (epoch, loss / (i+1)))
-
-		if last_loss < loss:
-			step_worse = step_worse + 1
-			if step_worse == 3:
-				print("BREAK")
-				break
-		else:
-			step_worse = 0
-
-	print("Training done.")
-
-	model_name = "model_CompleteCNN_{}_{}_{:.4f}".format(BATCH_SIZE, NB_EPOCHS, (loss / (i+1)))
-	torch.save(model, SAVED_MODEL_DIR + model_name)
+		model = torch.load(SAVED_MODEL)
+		print("Model loaded")
 
 	########## Apply on test set ##########
 
