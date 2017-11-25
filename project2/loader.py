@@ -10,7 +10,8 @@ import torch
 import torch.utils.data as data
 from torchvision import transforms
 
-from parameters import IMG_PATCH_SIZE
+from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION
+from preprocessing import data_augmentation
 
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
@@ -20,8 +21,15 @@ class TrainingSet(data.Dataset):
         labels = glob.glob('./data/training/groundtruth/*.png')
         print("*** Loading training images and groundtruth ***")
 
-        self.X = torch.cat([img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)])
-        self.Y = torch.cat([img_crop(transforms.ToTensor()(Image.open(label)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)])
+        if DATA_AUGMENTATION:
+            print("*** Creating data augmentation ***")
+            imgs, labels = data_augmentation(imgs, labels)
+
+        img_patch_train = [img_crop(preprocess(img), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
+        img_patch_test = [img_crop(transforms.ToTensor()(label), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
+
+        self.X = torch.cat(img_patch_train)
+        self.Y = torch.cat(img_patch_test)
         
         # Need to round because groundtruth not binary (some values between 0 and 1)
         self.Y = torch.round(self.Y)

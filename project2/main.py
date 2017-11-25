@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, TestSet
-from parameters import BATCH_SIZE, NB_EPOCHS
+from parameters import BATCH_SIZE, NB_EPOCHS, CUDA
 from model import CNN, SimpleCNN, CompleteCNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
 
