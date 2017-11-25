@@ -1,78 +1,32 @@
+import numpy
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
+from PIL import Image
+from tqdm import tqdm
+from sklearn.metrics import accuracy_score
 
 import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch.nn.functional as F
-from tqdm import tqdm
-
-from sklearn.metrics import accuracy_score
+from torchvision import transforms
 
 from loader import TrainingSet, TestSet
 from parameters import BATCH_SIZE, NB_EPOCHS
-from model import CNN, DummyCNN
+from model import CNN, SimpleCNN, CompleteCNN
+from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
 
-from functools import reduce
-import itertools
+PREDICTION_TEST_DIR = 'predictions_test_tmp/'
 
-# NOT FINISHED
-def prediction_to_np_patched(img):
-	width = int(img.size(0) / 16)
-	height = int(img.size(1) / 16)
-
-	print("max:", torch.max(img.data))
-	print("min:", torch.min(img.data))
-
-	new_img = img.data.numpy()
-	print(new_img.shape)
-
-	# To define
-	threshold = 0
-
-	for h in range(height):
-		for w in range(width):
-			road_votes = 0
-			for i in range(16):
-				for j in range(16):
-					road_votes += new_img[16*h + i, 16*w + j]
-
-			print('road_votes:', road_votes)
-						
-			if road_votes >= threshold:
-				for i in range(16):
-					for j in range(16):
-						new_img[16*h + i, 16*w + j] = 1
-			else:
-				for i in range(16):
-					for j in range(16):
-						new_img[16*h + i, 16*w + j] = 0
-
-	return new_img
-
-# NOT FINISHED
-def patched_to_submission_lines(img, img_number):
-	width = int(img.shape[0] / 16)
-	height = int(img.shape[1] / 16)
-	for h in range(height):
-		for w in range(width):
-			if img[h, w] == 1:
-				label = 1
-			else:
-				label = 0
-
-			yield ("{:03d}_{}_{},{}".format(img_number, w, h, label))
-			
 
 ########## Train our model ##########
 
 train_loader = DataLoader(TrainingSet(), num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
-model = CNN()
+model = CompleteCNN()
 
 print("Training...")
 
-data_size = sum(1 for _ in train_loader)
-print("Data size = %d" % data_size)
+#data_size = sum(1 for _ in train_loader)
 
 for epoch in tqdm(range(NB_EPOCHS)):
 	loss = 0
@@ -82,10 +36,13 @@ for epoch in tqdm(range(NB_EPOCHS)):
 
 	for i, (data, target) in tqdm(enumerate(train_loader)):
 		data, target = Variable(data), Variable(target)
+		loss += model.step(data, target)
+		'''
 		if i >= data_size // 10:
 			loss += model.step(data, target)
 		else:
 			validation_info.append((data, target))
+		'''
 
 	# Cross-validating: TODO
 	'''
@@ -116,6 +73,8 @@ test_loader = DataLoader(TestSet(), num_workers=4, batch_size=1, shuffle=False)
 
 print("Applying model on test set and predicting...")
 
+model.eval()
+
 lines = []
 for i, (data, _) in tqdm(enumerate(test_loader)):
 	# prediction is (1x1x608*608)
@@ -124,20 +83,18 @@ for i, (data, _) in tqdm(enumerate(test_loader)):
 	# By squeezing prediction, it becomes (608x608), and we
 	# get kaggle pred which is also (608*608) but black/white by patch
 	kaggle_pred = prediction_to_np_patched(prediction.squeeze())
-	imshow(kaggle_pred, cmap='gray', vmin=0, vmax=1)
-	plt.show()
+
+	# Save the prediction image (concatenated with the real image)
+	concat_data = concatenate_images(data.squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
+	Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + "prediction_" + str(i+1) + ".png")
 
 	# Store the lines in the form Kaggle wants it: "{:03d}_{}_{},{}"
 	for new_line in patched_to_submission_lines(kaggle_pred, i+1):
 		lines.append(new_line)
 	
-	break
-
 # Create submission file
 with open('data/submissions/submission_pytorch.csv', 'w') as f:
     f.write('id,prediction\n')
     f.writelines('{}\n'.format(line) for line in lines)
 
 print("Predictions done.")
-
-

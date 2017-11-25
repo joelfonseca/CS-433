@@ -49,7 +49,13 @@ class TrainingSet(data.Dataset):
 
 class TestSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/test_set_images/**/*.png')
+        imgs = []
+        for i in range(50):
+            imgs.append('./data/test_set_images/test_%d/test_%d.png' % (i+1, i+1))
+        
+        for img in imgs:
+            print(img)
+
         print("*** Loading test images ***")
 
         self.X = torch.stack([preprocess(Image.open(img)) for img in tqdm(imgs)])
@@ -85,3 +91,4 @@ def img_crop(im, w, h):
             list_patches.append(im_patch)
 
     return torch.stack(list_patches)
+
