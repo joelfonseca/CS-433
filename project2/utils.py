@@ -1,5 +1,7 @@
 import torch
 import numpy
+from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
+from parameters import POSTPROCESSING
 
 def prediction_to_np_patched(img):
 	width = int(img.size(0) / 16)
@@ -31,7 +33,17 @@ def prediction_to_np_patched(img):
 					for j in range(16):
 						new_img[16*h + i, 16*w + j] = 0
 
-	print("Number of roads: %d over %d patches (%.2f%%)" % (roads, width * height, roads / (width * height) * 100.0))
+	#print(new_img)
+	if POSTPROCESSING:
+		delete_outlier(new_img, 16)
+		tetris_shape_cleaner(new_img, 16)
+		border_cleaner(new_img, 16)
+		region_cleaner(new_img, 16)
+		naive_cleaner(new_img, 16)
+	#print(new_img)
+
+	# need to update
+	#print("Number of roads: %d over %d patches (%.2f%%)" % (roads, width * height, roads / (width * height) * 100.0))
 	return new_img
 
 

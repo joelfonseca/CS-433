@@ -27,7 +27,7 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 SAVED_MODEL = ""
-#SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_100_100_55_0.0819"
+#SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_20_20_0.1283"
 
 ########## Train our model ##########
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
 	else:
 
-		model = torch.load(SAVED_MODEL)
+		model = torch.load(SAVED_MODEL, map_location=lambda storage, loc: storage)
 		print("Model loaded")
 
 	########## Apply on test set ##########
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 		if CUDA:
 			prediction = model.predict(Variable(data).cuda())
 		else: 
-			prediction = model.predict(Variable(data))
+			prediction = model.predict(Variable(data, volatile=True))
 
 		# By squeezing prediction, it becomes (608x608), and we
 		# get kaggle pred which is also (608*608) but black/white by patch

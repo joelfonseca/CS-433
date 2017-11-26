@@ -1,6 +1,8 @@
 """Contains all the preprocessing functions used."""
-import numpy as np
 from PIL import Image
+import random
+from parameters import SEED
+import numpy as np
 
 def data_augmentation(imgs, labels):
     num_imgs = len(imgs)
@@ -25,7 +27,16 @@ def data_augmentation(imgs, labels):
         rotate_270_img = img.transpose(Image.ROTATE_270)
         rotate_270_label = label.transpose(Image.ROTATE_270)
 
-        imgs_processed.extend([img, horizontal_flip_img, vertical_flip_img, rotate_90_img, rotate_270_img])
-        labels_processed.extend([label, horizontal_flip_label, vertical_flip_label, rotate_90_label, rotate_270_label])
+        alpha = random.randint(0,180)
+        rotate_random_img = img.rotate(alpha)
+        rotate_random_label = label.rotate(alpha)
+
+        grayscale_img = img.convert("L")
+        #repeat for the 3 channels
+        grayscale_img = np.stack([grayscale_img, grayscale_img, grayscale_img], 2)
+        grayscale_label = label
+
+        imgs_processed.extend([img, horizontal_flip_img, vertical_flip_img, rotate_90_img, rotate_270_img, rotate_random_img, grayscale_img])
+        labels_processed.extend([label, horizontal_flip_label, vertical_flip_label, rotate_90_label, rotate_270_label, rotate_random_label, grayscale_label])
 
     return imgs_processed, labels_processed
