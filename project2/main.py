@@ -16,6 +16,8 @@ from parameters import BATCH_SIZE, NB_EPOCHS, CUDA
 from model import CNN, SimpleCNN, CompleteCNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
 
+from random import shuffle
+
 PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
 
@@ -27,7 +29,11 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 SAVED_MODEL = ""
+<<<<<<< HEAD
 #SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_20_20_0.1283"
+=======
+SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_40_40_0.0770"
+>>>>>>> 1f46a942070d6142e76604e976aa8fb7c081dbc6
 
 ########## Train our model ##########
 
@@ -59,6 +65,9 @@ if __name__ == '__main__':
 				both.append((Variable(data), Variable(target)))
 
 		for epoch in tqdm(range(NB_EPOCHS)):
+
+			shuffle(both)
+
 			last_loss = loss
 			loss = 0
 
@@ -115,6 +124,8 @@ if __name__ == '__main__':
 
 		model = torch.load(SAVED_MODEL, map_location=lambda storage, loc: storage)
 		print("Model loaded")
+
+
 
 	########## Apply on test set ##########
 

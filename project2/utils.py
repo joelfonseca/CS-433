@@ -3,6 +3,9 @@ import numpy
 from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
 from parameters import POSTPROCESSING
 
+from parameters import THRESHOLD_ROAD 
+
+
 def prediction_to_np_patched(img):
 	width = int(img.size(0) / 16)
 	height = int(img.size(1) / 16)
@@ -13,7 +16,7 @@ def prediction_to_np_patched(img):
 	new_img = img.data.numpy()
 
 	# To define
-	threshold = 64
+	threshold = THRESHOLD_ROAD
 
 	roads = 0
 	for h in range(height):
