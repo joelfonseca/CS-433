@@ -155,8 +155,11 @@ if __name__ == '__main__':
 		if CUDA:
 			kaggle_pred = prediction_to_np_patched(prediction.cpu().squeeze())
 		else:
-			#kaggle_pred = prediction_to_np_patched(prediction.squeeze())
-			kaggle_pred = prediction.squeeze().data.numpy()
+			if OUTPUT_RAW_CONTENT:
+				kaggle_pred = prediction.squeeze().data.numpy()
+			else:
+				kaggle_pred = prediction_to_np_patched(prediction.squeeze())
+			
 
 		# Save the prediction image (concatenated with the real image)
 		concat_data = concatenate_images(data.squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)

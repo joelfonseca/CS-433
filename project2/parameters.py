@@ -12,3 +12,5 @@ SEED = 7
 K_FOLD = 4
 
 CUDA = False
+
+OUTPUT_RAW_CONTENT = False
