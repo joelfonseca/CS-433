@@ -24,6 +24,9 @@ class TrainingSet(data.Dataset):
         if DATA_AUGMENTATION:
             print("*** Creating data augmentation ***")
             imgs, labels = data_augmentation(imgs, labels)
+        else:
+            imgs = [Image.open(img) for img in imgs]
+            labels = [Image.open(label) for label in labels]
 
         img_patch_train = [img_crop(preprocess(img), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
         img_patch_test = [img_crop(transforms.ToTensor()(label), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]

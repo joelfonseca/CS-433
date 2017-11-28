@@ -12,9 +12,10 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, TestSet
-from parameters import BATCH_SIZE, NB_EPOCHS, CUDA
+from parameters import BATCH_SIZE, NB_EPOCHS, CUDA, K_FOLD, SEED
 from model import CNN, SimpleCNN, CompleteCNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
+from cross_validation import build_k_indices
 
 from random import shuffle
 
@@ -29,11 +30,7 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 SAVED_MODEL = ""
-<<<<<<< HEAD
 #SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_20_20_0.1283"
-=======
-SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_40_40_0.0770"
->>>>>>> 1f46a942070d6142e76604e976aa8fb7c081dbc6
 
 ########## Train our model ##########
 
@@ -49,75 +46,85 @@ if __name__ == '__main__':
 
 		print("Training...")
 
-		#data_size = sum(1 for _ in train_loader)
-
-		loss = 1E9
-		last_loss = 0
 		step_worse = 0
-		r = 0
+		loss = 0
 
-		both = []
-		for (data, target) in train_loader:
+		data = []
+		targets = []
 
-			if CUDA:
-				both.append((Variable(data).cuda(), Variable(target).cuda()))
-			else:
-				both.append((Variable(data), Variable(target)))
+		for (data_, target_) in train_loader:
+			data.append(Variable(data_))
+			targets.append(Variable(target_))
 
 		for epoch in tqdm(range(NB_EPOCHS)):
+			accs_fold = []
 
-			shuffle(both)
+			for k in range(K_FOLD):
+				accs = []
 
-			last_loss = loss
-			loss = 0
+				# Create list of k indices for cross-validation
+				k_indices = build_k_indices(data, K_FOLD, SEED)
 
-			# Storing tuples of (validation_data, validation_target) for validation part
-			validation_info = []
+				# Create the validation fold
+				validation_data = [data[i] for i in k_indices[k]]
+				validation_targets = [targets[i] for i in k_indices[k]]
 
-			for i, (data, target) in tqdm(enumerate(both)):
+				# Create the training folds
+				k_indices = numpy.delete(k_indices, k, 0)
+				k_indices = k_indices.flatten()
+
+				train_data = [data[i] for i in k_indices]
+				train_targets = [targets[i] for i in k_indices]
+
+				if CUDA:
+					for element in train_data+train_targets+validation_data+validation_targets:
+						element.cuda()
 				
-				loss += model.step(data, target)
-				'''
-				if i >= data_size // 10:
-					loss += model.step(data, target)
-				else:
-					validation_info.append((data, target))
-				'''
+				# Shuffle the training data and targets in the same way
+				train_data_and_targets = list(zip(train_data, train_targets))
+				shuffle(train_data_and_targets)
+				train_data, train_targets = zip(*train_data_and_targets)
 
-			# Cross-validating: TODO
-			'''
-			accs = []
-			for validation_data, validation_target in validation_info:
-				y_pred = model.predict(validation_data)
+				# Combine validation data and targets as tuples
+				validation_data_and_targets = zip(validation_data, validation_targets)
+
+				# Train the model
+				for i in range(len(train_data_and_targets)):
+					loss += model.step(train_data[i], train_targets[i])
+
+				# Make validation
+				for validation_data_, validation_target_ in validation_data_and_targets:
+					y_pred = model.predict(validation_data_)
+					acc = accuracy_score(validation_target_.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round())
+					accs.append(acc)
 				
-				# Need to call 'prediction_to_np_patched' on every pred
+				# Mean of the validation predictions
+				accs_mean = numpy.mean(accs)
 
+				# Accuracies of the k different folds
+				accs_fold.append(accs_mean)
 
-				print(y_pred[0].size())
+			# Accuracy of the current epoch
+			acc_epoch = numpy.mean(accs_fold)
+			last_acc_epoch = acc_epoch
+			print("Accuracy: {:.4f}" .format(acc_epoch))
 
-
-				print(validation_target.size())
-				acc = accuracy_score(validation_target.data.view(-1).numpy(), y_pred.data.view(-1).numpy())
-				accs.append(acc)
-
-			print("Accuracy = %f" % torch.mean(accs))
-			'''
-
-			print("Loss at epoch %d = %f" % (epoch, loss / (i+1)))
-
-			r = r + 1
-			if r % 5 == 0:
-				model_name = "model_CompleteCNN_{}_{}_{}_{:.4f}".format(BATCH_SIZE, NB_EPOCHS, r, (loss / (i+1)))
+			# Make a save of the model every 5 epochs
+			if epoch % 5 == 0:
+				model_name = "model_CompleteCNN_{}_{}_{}_{:.4f}".format(BATCH_SIZE, NB_EPOCHS, epoch, acc_epoch)
 				torch.save(model, SAVED_MODEL_DIR + model_name)
 
-			if last_loss < loss:
+			# Check that the model is not doing worst over the time
+			if last_acc_epoch > acc_epoch:
 				step_worse = step_worse + 1
 				if step_worse == 3:
-					print("BREAK")
+					print("Overfitting")
 					break
 			else:
 				step_worse = 0
-
+			
+			last_acc_epoch = acc_epoch
+			
 		print("Training done.")
 
 	else:
@@ -148,7 +155,8 @@ if __name__ == '__main__':
 		if CUDA:
 			kaggle_pred = prediction_to_np_patched(prediction.cpu().squeeze())
 		else:
-			kaggle_pred = prediction_to_np_patched(prediction.squeeze())
+			#kaggle_pred = prediction_to_np_patched(prediction.squeeze())
+			kaggle_pred = prediction.squeeze().data.numpy()
 
 		# Save the prediction image (concatenated with the real image)
 		concat_data = concatenate_images(data.squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
