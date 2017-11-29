@@ -1,4 +1,8 @@
 """Contains all the postprocessing functions used."""
+from PIL import Image
+import torch
+import numpy as np
+
 def is_outlier(img, x, y, color, IMG_PATCH_SIZE):
     outlier = True
     for i in [-IMG_PATCH_SIZE, 0, IMG_PATCH_SIZE]:
@@ -291,3 +295,43 @@ def naive_cleaner(img, IMG_PATCH_SIZE):
                 ):
                 update_pixel_batch(img, i, j, ROAD)
                 update_pixel_batch(img, i+IMG_PATCH_SIZE, j, ROAD)
+
+def add_flips(imgs):
+
+    # This list will contain all the images (original + flipped versions)
+    flipped_imgs = []
+
+    for img in imgs:
+
+        # For every image we create the 4 possible flips
+        img = Image.open(img)
+        horizontal_flip_img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        vertical_flip_img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        horizontal_and_vertical_flip_img = horizontal_flip_img.transpose(Image.FLIP_TOP_BOTTOM)
+
+        # Add them to the list in a specific order
+        flipped_imgs.extend([img, horizontal_flip_img, vertical_flip_img, horizontal_and_vertical_flip_img])
+
+    return flipped_imgs
+
+def majority_voting(imgs):
+
+    # Retrieve the different images in correct order
+    img = imgs[0]
+    horizontal_flip_img = imgs[1]
+    vertical_flip_img = imgs[2]
+    horizontal_and_vertical_flip_img = imgs[3]
+
+    # Retrieve the original image for every flip
+    img1 = img
+    img2 = torch.from_numpy(np.flip(horizontal_flip_img.data.numpy(), 1).copy())
+    img3 = torch.from_numpy(np.flip(vertical_flip_img.data.numpy(), 0).copy())
+    img4 = torch.from_numpy(np.flip(np.flip(horizontal_and_vertical_flip_img.data.numpy(), 1), 0).copy())
+
+    # Stack the 4 images together along a new dimension
+    imgs = torch.stack([img1, img2, img3, img4])
+    
+    # Mean of the 4 images along this new dimension
+    img_mean = torch.mean(imgs, 0)
+
+    return img_mean
