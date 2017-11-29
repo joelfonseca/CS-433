@@ -12,10 +12,11 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, TestSet
-from parameters import BATCH_SIZE, NB_EPOCHS, CUDA, K_FOLD, SEED, OUTPUT_RAW_PREDICTION, CROSS_VALIDATION
+from parameters import BATCH_SIZE, NB_EPOCHS, CUDA, K_FOLD, SEED, OUTPUT_RAW_PREDICTION, CROSS_VALIDATION, MAJORITY_VOTING
 from model import CNN, SimpleCNN, CompleteCNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
 from cross_validation import build_k_indices
+from postprocessing import majority_voting
 
 from random import shuffle
 
@@ -30,7 +31,7 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 SAVED_MODEL = ""
-#SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_20_20_0.1283"
+SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_50_50_0.0736"
 
 ########## Train our model ##########
 
@@ -200,31 +201,72 @@ if __name__ == '__main__':
 	model.eval()
 
 	lines = []
-	for i, (data, _) in tqdm(enumerate(test_loader)):
-		# prediction is (1x1x608*608)
-		if CUDA:
-			prediction = model.predict(Variable(data).cuda())
-		else: 
-			prediction = model.predict(Variable(data, volatile=True))
+	if MAJORITY_VOTING:
+		# Buffer that will contain the four images needed for majority voting
+		kaggle_preds = []
+		# To keep track of the original image
+		datas = []
+		for i, (data, _) in tqdm(enumerate(test_loader)):
+			# prediction is (1x1x608*608)
+			if CUDA:
+				prediction = model.predict(Variable(data).cuda())
+			else: 
+				prediction = model.predict(Variable(data, volatile=True))
 
-		# By squeezing prediction, it becomes (608x608), and we
-		# get kaggle pred which is also (608*608) but black/white by patch
-		if CUDA:
-			kaggle_pred = prediction_to_np_patched(prediction.cpu().squeeze())
-		else:
-			if OUTPUT_RAW_PREDICTION:
-				kaggle_pred = prediction.squeeze().data.numpy()
+			# By squeezing prediction, it becomes (608x608), and we
+			# get kaggle pred which is also (608*608) but black/white by patch
+			if CUDA:
+				kaggle_pred = prediction.cpu().squeeze()
+				kaggle_preds.append(kaggle_pred)
 			else:
-				kaggle_pred = prediction_to_np_patched(prediction.squeeze())
+				kaggle_pred = prediction.squeeze()
+				kaggle_preds.append(kaggle_pred)
 			
+			datas.append(data)
 
-		# Save the prediction image (concatenated with the real image)
-		concat_data = concatenate_images(data.squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
-		Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + "prediction_" + str(i+1) + ".png")
+			# Every for 4 iterations kaggle_preds will contain the four images
+			# needed to do the majority voting
+			if (i+1)%4 == 0:
+				kaggle_pred = prediction_to_np_patched(majority_voting(kaggle_preds))
 
-		# Store the lines in the form Kaggle wants it: "{:03d}_{}_{},{}"
-		for new_line in patched_to_submission_lines(kaggle_pred, i+1):
-			lines.append(new_line)
+				# Save the prediction image (concatenated with the real image)
+				concat_data = concatenate_images(datas[i-3].squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
+				Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + "prediction_" + str((i+1)//4) + ".png")
+
+				# Store the lines in the form Kaggle wants it: "{:03d}_{}_{},{}"
+				for new_line in patched_to_submission_lines(kaggle_pred, ((i+1)//4)):
+					lines.append(new_line)
+
+				# Empty the buffer for the next four images
+				kaggle_preds = []
+	else:
+		for i, (data, _) in tqdm(enumerate(test_loader)):
+			# prediction is (1x1x608*608)
+			if CUDA:
+				prediction = model.predict(Variable(data).cuda())
+			else: 
+				prediction = model.predict(Variable(data, volatile=True))
+
+			# By squeezing prediction, it becomes (608x608), and we
+			# get kaggle pred which is also (608*608) but black/white by patch
+			if CUDA:
+				if OUTPUT_RAW_PREDICTION :
+					kaggle_pred = prediction.cpu().squeeze().data.numpy()
+				else:
+					kaggle_pred = prediction_to_np_patched(prediction.cpu().squeeze())
+			else:
+				if OUTPUT_RAW_PREDICTION :
+					kaggle_pred = prediction.squeeze().data.numpy()
+				else:
+					kaggle_pred = prediction_to_np_patched(prediction.squeeze())
+			
+			# Save the prediction image (concatenated with the real image)
+			concat_data = concatenate_images(data.squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
+			Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + "prediction_" + str(i+1) + ".png")
+
+			# Store the lines in the form Kaggle wants it: "{:03d}_{}_{},{}"
+			for new_line in patched_to_submission_lines(kaggle_pred, i+1):
+				lines.append(new_line)
 		
 	# Create submission file
 	with open('data/submissions/submission_pytorch.csv', 'w') as f:

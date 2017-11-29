@@ -40,9 +40,9 @@ def prediction_to_np_patched(img):
 	if POSTPROCESSING:
 		delete_outlier(new_img, 16)
 		tetris_shape_cleaner(new_img, 16)
-		border_cleaner(new_img, 16)
+		#border_cleaner(new_img, 16)
 		region_cleaner(new_img, 16)
-		naive_cleaner(new_img, 16)
+		#naive_cleaner(new_img, 16)
 	#print(new_img)
 
 	# need to update

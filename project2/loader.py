@@ -10,8 +10,9 @@ import torch
 import torch.utils.data as data
 from torchvision import transforms
 
-from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION
+from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, MAJORITY_VOTING
 from preprocessing import data_augmentation
+from postprocessing import add_flips
 
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
@@ -69,16 +70,12 @@ class TestSet(data.Dataset):
 
         print("*** Loading test images ***")
 
-        self.X = torch.stack([preprocess(Image.open(img)) for img in tqdm(imgs)])
+        if MAJORITY_VOTING:
+            imgs = add_flips(imgs)
+        else:
+            imgs = [Image.open(img) for img in imgs]
 
-        '''
-        for i, square in enumerate(self.X):
-            print(square.size())
-            imshow(square.permute(1, 2, 0).numpy())
-            plt.show()
-            break
-        '''  
-
+        self.X = torch.stack([preprocess(img) for img in tqdm(imgs)])
     
     def __len__(self):
         return len(self.X)
