@@ -92,6 +92,7 @@ if __name__ == '__main__':
 					data, target = Variable(data), Variable(target)
 
 				model.step(data, target)
+				del data, target
 
 			# Make the validation
 			acc_track = []
@@ -107,9 +108,10 @@ if __name__ == '__main__':
 				else:
 					acc = f1_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round(), average='micro')
 				
-				loss = F.binary_cross_entropy_with_logits(data, target).data[0]
+				loss = F.binary_cross_entropy_with_logits(y_pred, target).data[0]
 				loss_track.append(loss)
 				acc_track.append(acc)
+				del data, target, loss, y_pred
 
 			# Kepp track of learning process
 			loss_epoch = numpy.mean(loss_track)

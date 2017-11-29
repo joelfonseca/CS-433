@@ -196,6 +196,7 @@ class CompleteCNN(nn.Module):
 		out = self.forward(input)
 		loss = self.loss_function(out, target)
 		loss.backward()
+		del loss, out
 		self.optimizer.step()
 
 		return loss.data[0]
