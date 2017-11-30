@@ -78,8 +78,6 @@ class ValidationSet(data.Dataset):
     def __init__(self, X_validation, Y_validation):
         self.X = X_validation
         self.Y = Y_validation
-        # Need to round because groundtruth not binary (some values between 0 and 1)
-        self.Y = torch.round(self.Y)
 
     def __len__(self):
         return len(self.X)
