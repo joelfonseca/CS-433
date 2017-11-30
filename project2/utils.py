@@ -85,3 +85,12 @@ def concatenate_images(img, gt_img):
 		img8 = img_float_to_uint8(img)
 		cimg = numpy.concatenate((img8, gt_img_3c), axis=1)
 	return cimg
+
+def snapshot(saved_model_dir, run_time, run_name, state_dict):
+	
+	# Write the full name
+	complete_name = saved_model_dir + run_time + '_' + run_name + '_best'
+	
+	# Save the model
+	with open(complete_name + '.pt', 'wb') as f:
+		torch.save(state_dict, f)

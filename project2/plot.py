@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 
-def plot_results(model_name, loss_acc_track):
+def plot_results(model_dir, run_time, run_name, loss_acc_track):
+
+    complete_name = model_dir + run_time + '_' + run_name + '_results'
 
     losses = [i[0] for i in loss_acc_track]
     accs = [i[1] for i in loss_acc_track]
@@ -13,5 +15,5 @@ def plot_results(model_name, loss_acc_track):
     plt.title('CNN')
     leg = plt.legend(loc=1, shadow=True)
     leg.draw_frame(False)
-    plt.savefig(model_name + '_results.png')
+    plt.savefig(complete_name + '.png')
     plt.gcf().clear()

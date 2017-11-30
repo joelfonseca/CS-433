@@ -14,7 +14,7 @@ from torchvision import transforms
 from loader import TrainingSet, ValidationSet, TestSet
 from parameters import LEARNING_RATE, BATCH_SIZE, IMG_PATCH_SIZE, CUDA, OUTPUT_RAW_PREDICTION, MAJORITY_VOTING
 from model import CompleteCNN
-from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
+from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, snapshot
 from postprocessing import majority_voting
 from plot import plot_results
 
@@ -26,6 +26,7 @@ PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
 RAW_PREDICTION_DIR = 'data/raw_prediction/'
 FIGURE_DIR = 'figures/'
+RUN_TIME = '{:%Y-%m-%d_%H-%M}' .format(datetime.datetime.now())
 
 '''
 to load a model :
@@ -36,6 +37,9 @@ the_model.load_state_dict(torch.load(PATH))
 
 SAVED_MODEL = ""
 #SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_50_50_0.0736"
+
+MODEL_NAME = 'CompleteCNN'
+RUN_NAME = MODEL_NAME + '_{:.0e}_{}_{}' .format(LEARNING_RATE, BATCH_SIZE, IMG_PATCH_SIZE)
 
 ########## Train our model ##########
 
@@ -76,16 +80,15 @@ if __name__ == '__main__':
 				validation_data_and_targets.append((Variable(data), Variable(target)))'''
 		
 		# Define variables needed later
-		loss_acc_track = []
-		last_acc_epoch = 0
+		loss_score_track = []
+		# Tuple containing best (epoch, epoch_score)
+		best_score = (0,0)
 		loss = 0
 		bar1 = tqdm(desc='EPOCHS', leave=False)
 		bar1.refresh()
 		# The model will keep training until it makes no progression after 10 epochs
 		while True:
 			epoch = bar1.n
-			# Shuffle the training data
-			#shuffle(train_data_and_targets)
 
 			# Train the model
 			loss_track = []
@@ -99,7 +102,7 @@ if __name__ == '__main__':
 				del data, target
 
 			# Make the validation
-			acc_track = []
+			score_track = []
 			for data, target in validation_loader:
 				if CUDA:
 					data, target = Variable(data).cuda(), Variable(target).cuda()
@@ -108,52 +111,43 @@ if __name__ == '__main__':
 
 				y_pred = model.predict(data)
 				if CUDA:
-					acc = f1_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round(), average='micro')
+					score = f1_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round(), average='micro')
 				else:
-					acc = f1_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round(), average='micro')
+					score = f1_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round(), average='micro')
 				
 				loss = F.binary_cross_entropy_with_logits(y_pred, target).data[0]
 				loss_track.append(loss)
-				acc_track.append(acc)
+				score_track.append(score)
 				del data, target, loss, y_pred
 
 			# Kepp track of learning process
 			loss_epoch = numpy.mean(loss_track)
-			acc_epoch = numpy.mean(acc_track)
-			loss_acc_track.append((loss_epoch, acc_epoch))
+			score_epoch = numpy.mean(score_track)
+			loss_score_track.append((loss_epoch, score_epoch))
 
-			bar1.set_postfix(acc=acc_epoch, loss=loss_epoch)
+			bar1.set_postfix(score=score_epoch, loss=loss_epoch)
 			bar1.refresh()
-			# Make a save of the model every 10 epochs
-			if epoch % 10 == 0:
-				model_name = "{:%Y-%m-%d_%H-%M-%S}_CompleteCNN_{:.0e}_{}_{}_{}_{:.5f}_{:.5f}".format(datetime.datetime.now(), LEARNING_RATE, BATCH_SIZE, IMG_PATCH_SIZE, epoch, loss_epoch, acc_epoch)
-				#torch.save(model, SAVED_MODEL_DIR + model_name)
-				with open(SAVED_MODEL_DIR + model_name + '.pt', 'wb') as f:
-					torch.save(model.state_dict(), f)
+			# Save the model if it has a better score
+			if score_epoch > best_score[1]:
+				best_score = (epoch, score_epoch)
+				snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, model.state_dict())
 
-			# Check that the model is not doing worst over the time
-			# update with epoch and best acc /!\
-			if last_acc_epoch > acc_epoch:
-				step_worse = step_worse + 1
-				if step_worse == 10:
-					print("Overfitting.")
-					break
-			else:
-				step_worse = 0
+			# Check that the model is making progress over time
+			if best_score[0] + 2 < epoch:
+				print('Model is overfitting. Stopped at epoch {} with loss={:.5f} and score={:.5f}.' .format(epoch,epoch, loss_epoch, score_epoch))
+				break
 
-			last_acc_epoch = acc_epoch
-			
 			bar1.update()
 			
 		print("Training done.")
 
 		# Save results in figure until last saved model
-		plot_results(FIGURE_DIR + model_name, loss_acc_track)
+		plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track)
 
 	else:
 
 		#model = torch.load(SAVED_MODEL, map_location=lambda storage, loc: storage)
-		model.load_state_dict(torch.load(SAVED_MODEL_DIR + model_name + '.pt'))
+		model.load_state_dict(torch.load(SAVED_MODEL_DIR + MODEL_NAME + '.pt'))
 		print("Model loaded.")
 
 
@@ -164,6 +158,8 @@ if __name__ == '__main__':
 
 	print("Applying model on test set and predicting...")
 
+	# Load the best model from training
+	model.load_state_dict(torch.load(SAVED_MODEL_DIR + RUN_TIME + '_' + RUN_NAME + '_best.pt'))
 	model.eval()
 
 	lines = []
