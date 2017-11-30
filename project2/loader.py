@@ -16,8 +16,8 @@ preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.
 
 class TrainingSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/training/images2/*.png')
-        labels = glob.glob('./data/training/groundtruth2/*.png')
+        imgs = glob.glob('./data/training/images/*.png')
+        labels = glob.glob('./data/training/groundtruth/*.png')
         print("*** Loading training images and groundtruth ***")
 
         img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
