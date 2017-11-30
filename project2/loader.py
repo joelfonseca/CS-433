@@ -16,8 +16,8 @@ preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.
 
 class TrainingSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/training/images/*.png')
-        labels = glob.glob('./data/training/groundtruth/*.png')
+        imgs = glob.glob('./data/training/images2/*.png')
+        labels = glob.glob('./data/training/groundtruth2/*.png')
         print("*** Loading training images and groundtruth ***")
 
         img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
@@ -25,6 +25,9 @@ class TrainingSet(data.Dataset):
 
         self.X = torch.cat(img_patch_train)
         self.Y = torch.cat(img_patch_test)
+
+        # Need to round because groundtruth not binary (some values between 0 and 1)
+        self.Y = torch.round(self.Y)
 
         # Permute the data and the targets the same way
         num_patches = self.X.size(0)
@@ -41,9 +44,6 @@ class TrainingSet(data.Dataset):
         # Create test data
         self.X = self.X[validation_size:]
         self.Y = self.Y[validation_size:]
-
-        # Need to round because groundtruth not binary (some values between 0 and 1)
-        self.Y = torch.round(self.Y)
     
     def __len__(self):
         return len(self.X)
