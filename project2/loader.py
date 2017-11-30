@@ -1,18 +1,12 @@
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow
-
 from PIL import Image
 import glob, sys, os, random
 from tqdm import tqdm
-import numpy as np
-import random
 
 import torch
 import torch.utils.data as data
 from torchvision import transforms
 
-from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, MAJORITY_VOTING, SEED
-from preprocessing import data_augmentation
+from parameters import IMG_PATCH_SIZE, MAJORITY_VOTING, SEED
 from postprocessing import add_flips
 
 to_PIL = transforms.ToPILImage()
@@ -22,8 +16,8 @@ preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.
 
 class TrainingSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/training/images/*.png')
-        labels = glob.glob('./data/training/groundtruth/*.png')
+        imgs = glob.glob('./data/training/images2/*.png')
+        labels = glob.glob('./data/training/groundtruth2/*.png')
         print("*** Loading training images and groundtruth ***")
 
         img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
@@ -67,9 +61,10 @@ class TrainingSet(data.Dataset):
         args_transpose = [Image.FLIP_LEFT_RIGHT, Image.FLIP_TOP_BOTTOM]
         args_rotate = random.randint(0,180)
         args = {'transpose': random.choice(args_transpose), 'rotate': args_rotate}
-
+        
         # Select function and make corresponding transformation
         function = random.choice(functions)
+        
         img_X = getattr(img_X, function)(args[function])
         img_Y = getattr(img_Y, function)(args[function])
 

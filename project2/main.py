@@ -12,17 +12,20 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, ValidationSet, TestSet
-from parameters import BATCH_SIZE, NB_EPOCHS, CUDA, K_FOLD, SEED, OUTPUT_RAW_PREDICTION, CROSS_VALIDATION, MAJORITY_VOTING
-from model import CNN, SimpleCNN, CompleteCNN
+from parameters import LEARNING_RATE, BATCH_SIZE, IMG_PATCH_SIZE, CUDA, OUTPUT_RAW_PREDICTION, MAJORITY_VOTING
+from model import CompleteCNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images
-from cross_validation import build_k_indices
 from postprocessing import majority_voting
+from plot import plot_results
 
 from random import shuffle
+
+import datetime
 
 PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
 RAW_PREDICTION_DIR = 'data/raw_prediction/'
+FIGURE_DIR = 'figures/'
 
 '''
 to load a model :
@@ -75,6 +78,7 @@ if __name__ == '__main__':
 		# Define variables needed later
 		loss_acc_track = []
 		last_acc_epoch = 0
+		loss = 0
 		bar1 = tqdm(desc='EPOCHS', leave=False)
 		bar1.refresh()
 		# The model will keep training until it makes no progression after 10 epochs
@@ -120,10 +124,9 @@ if __name__ == '__main__':
 
 			bar1.set_postfix(acc=acc_epoch, loss=loss_epoch)
 			bar1.refresh()
-			
 			# Make a save of the model every 10 epochs
 			if epoch % 10 == 0:
-				model_name = "model_CompleteCNN_{}_{}_{:.5f}_{:.5f}".format(BATCH_SIZE, epoch, loss_epoch, acc_epoch)
+				model_name = "{:%Y-%m-%d_%H-%M-%S}_CompleteCNN_{:.0e}_{}_{}_{}_{:.5f}_{:.5f}".format(datetime.datetime.now(), LEARNING_RATE, BATCH_SIZE, IMG_PATCH_SIZE, epoch, loss_epoch, acc_epoch)
 				#torch.save(model, SAVED_MODEL_DIR + model_name)
 				with open(SAVED_MODEL_DIR + model_name + '.pt', 'wb') as f:
 					torch.save(model.state_dict(), f)
@@ -143,6 +146,9 @@ if __name__ == '__main__':
 			bar1.update()
 			
 		print("Training done.")
+
+		# Save results in figure until last saved model
+		plot_results(FIGURE_DIR + model_name, loss_acc_track)
 
 	else:
 
@@ -169,7 +175,7 @@ if __name__ == '__main__':
 		for i, (data, _) in tqdm(enumerate(test_loader)):
 			# prediction is (1x1x608*608)
 			if CUDA:
-				prediction = model.predict(Variable(data).cuda())
+				prediction = model.predict(Variable(data).cuda(), volatile=True)
 			else: 
 				prediction = model.predict(Variable(data, volatile=True))
 
@@ -184,10 +190,10 @@ if __name__ == '__main__':
 			
 			datas.append(data)
 
-			# Every for 4 iterations kaggle_preds will contain the four images
+			# Every 4 iterations kaggle_preds will contain the four images
 			# needed to do the majority voting
 			if (i+1)%4 == 0:
-
+				
 				img_mv = majority_voting(kaggle_preds)
 				kaggle_pred = prediction_to_np_patched(img_mv)
 
@@ -205,7 +211,7 @@ if __name__ == '__main__':
 		for i, (data, _) in tqdm(enumerate(test_loader)):
 			# prediction is (1x1x608*608)
 			if CUDA:
-				prediction = model.predict(Variable(data).cuda())
+				prediction = model.predict(Variable(data).cuda(), volatile=True)
 			else: 
 				prediction = model.predict(Variable(data, volatile=True))
 
