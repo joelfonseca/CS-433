@@ -133,7 +133,7 @@ if __name__ == '__main__':
 				snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, model.state_dict())
 
 			# Check that the model is making progress over time
-			if best_score[0] + 2 < epoch:
+			if best_score[0] + 10 < epoch:
 				print('Model is overfitting. Stopped at epoch {} with loss={:.5f} and score={:.5f}.' .format(epoch,epoch, loss_epoch, score_epoch))
 				break
 
