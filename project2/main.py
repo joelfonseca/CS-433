@@ -91,23 +91,25 @@ if __name__ == '__main__':
 			epoch = bar1.n
 
 			# Train the model
-			loss_track = []
+			loss_train_track = []
 			for data, target in tqdm(train_loader, desc='BATCHES', leave=False):
 				if CUDA:
 					data, target = Variable(data).cuda(), Variable(target).cuda()
 				else:
 					data, target = Variable(data), Variable(target)
 
-				model.step(data, target)
-				del data, target
+				loss = model.step(data, target)
+				loss_train_track.append(loss)
 
 			# Make the validation
+			loss_validation_track = []
 			score_track = []
+			model.eval()
 			for data, target in validation_loader:
 				if CUDA:
-					data, target = Variable(data).cuda(), Variable(target).cuda()
+					data, target = Variable(data, volatile=True).cuda(), Variable(target, volatile=True).cuda()
 				else:
-					data, target = Variable(data), Variable(target)
+					data, target = Variable(data, volatile=True), Variable(target, volatile=True)
 
 				y_pred = model.predict(data)
 				if CUDA:
@@ -116,25 +118,26 @@ if __name__ == '__main__':
 					score = f1_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round(), average='micro')
 				
 				loss = F.binary_cross_entropy_with_logits(y_pred, target).data[0]
-				loss_track.append(loss)
+				loss_validation_track.append(loss)
 				score_track.append(score)
-				del data, target, loss, y_pred
 
 			# Kepp track of learning process
-			loss_epoch = numpy.mean(loss_track)
+			loss_train_epoch = numpy.mean(loss_train_track)
+			loss_validation_epoch = numpy.mean(loss_validation_track)
 			score_epoch = numpy.mean(score_track)
-			loss_score_track.append((loss_epoch, score_epoch))
+			loss_score_track.append((loss_validation_epoch, score_epoch))
 
-			bar1.set_postfix(score=score_epoch, loss=loss_epoch)
+			bar1.set_postfix(score=score_epoch, best_epoch = best_score[0], best_score=best_score[1], loss_validation=loss_validation_epoch, loss_train = loss_train_epoch)
 			bar1.refresh()
 			# Save the model if it has a better score
 			if score_epoch > best_score[1]:
 				best_score = (epoch, score_epoch)
 				snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, model.state_dict())
+				plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track)
 
 			# Check that the model is making progress over time
-			if best_score[0] + 10 < epoch:
-				print('Model is overfitting. Stopped at epoch {} with loss={:.5f} and score={:.5f}.' .format(epoch, loss_epoch, score_epoch))
+			if best_score[0] + 100 < epoch:
+				print('Model is overfitting. Stopped at epoch {} with loss_train={:.5f}, loss_validation={:.5f} and score={:.5f}.' .format(epoch, loss_train_epoch, loss_validation_epoch, score_epoch))
 				break
 
 			bar1.update()
@@ -171,7 +174,7 @@ if __name__ == '__main__':
 		for i, (data, _) in tqdm(enumerate(test_loader)):
 			# prediction is (1x1x608*608)
 			if CUDA:
-				prediction = model.predict(Variable(data).cuda(), volatile=True)
+				prediction = model.predict(Variable(data, volatile=True).cuda())
 			else: 
 				prediction = model.predict(Variable(data, volatile=True))
 
@@ -207,7 +210,7 @@ if __name__ == '__main__':
 		for i, (data, _) in tqdm(enumerate(test_loader)):
 			# prediction is (1x1x608*608)
 			if CUDA:
-				prediction = model.predict(Variable(data).cuda(), volatile=True)
+				prediction = model.predict(Variable(data, volatile=True).cuda())
 			else: 
 				prediction = model.predict(Variable(data, volatile=True))
 
