@@ -1,57 +1,95 @@
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow
-
 from PIL import Image
 import glob, sys, os, random
 from tqdm import tqdm
-import numpy as np
 
 import torch
 import torch.utils.data as data
 from torchvision import transforms
 
-from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, MAJORITY_VOTING
-from preprocessing import data_augmentation
+from parameters import IMG_PATCH_SIZE, MAJORITY_VOTING, SEED
 from postprocessing import add_flips
 
+to_PIL = transforms.ToPILImage()
+from_PIL = transforms.ToTensor()
+random_crop = transforms.RandomCrop()
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
 
 class TrainingSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/training/images/*.png')
-        labels = glob.glob('./data/training/groundtruth/*.png')
+        imgs = glob.glob('./data/training/images2/*.png')
+        labels = glob.glob('./data/training/groundtruth2/*.png')
         print("*** Loading training images and groundtruth ***")
 
-        if DATA_AUGMENTATION:
-            print("*** Creating data augmentation ***")
-            imgs, labels = data_augmentation(imgs, labels)
-        else:
-            imgs = [Image.open(img) for img in imgs]
-            labels = [Image.open(label) for label in labels]
+        #img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
+        #img_patch_test = [img_crop(transforms.ToTensor()(Image.open(label)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
 
-        img_patch_train = [img_crop(preprocess(img), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
-        img_patch_test = [img_crop(transforms.ToTensor()(label), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
+        img_patch_train = [preprocess(Image.open(img), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]        
+        img_patch_test = [transforms.ToTensor()(Image.open(label), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
 
         self.X = torch.cat(img_patch_train)
         self.Y = torch.cat(img_patch_test)
-        
+
         # Need to round because groundtruth not binary (some values between 0 and 1)
         self.Y = torch.round(self.Y)
 
-        '''
-        for i, square in enumerate(self.X):
-            print(square.size())
-            imshow(square.permute(1, 2, 0).numpy())
-            plt.show()
+        # Permute the data and the targets the same way
+        num_patches = self.X.size(0)
+        torch.manual_seed(SEED)
+        idx = torch.randperm(num_patches)
+        self.X = self.X[idx]
+        self.Y = self.Y[idx]
 
-            print(torch.max(self.Y[i]))
-            print(torch.min(self.Y[i]))
-            print(self.Y[i].size())
-            imshow(self.Y[i].squeeze().numpy())
-            plt.show()
-            break
-        '''
+        # Create validation data with 20% of data
+        validation_size = num_patches//5
+        self.X_validation = self.X[:validation_size]
+        self.Y_validation = self.Y[:validation_size]
+
+        # Create test data
+        self.X = self.X[validation_size:]
+        self.Y = self.Y[validation_size:]
     
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, index):
+
+        # Convert tensor to PIL image
+        img_X = to_PIL(self.X[index])
+        img_Y = to_PIL(self.Y[index])
+
+        # List of transformations
+        functions = ['transpose', 'rotate']
+
+        # List of arguments for each transformation
+        args_transpose = [Image.FLIP_LEFT_RIGHT, Image.FLIP_TOP_BOTTOM]
+        args_rotate = random.randint(0,180)
+        args = {'transpose': random.choice(args_transpose), 'rotate': args_rotate}
+        
+        # Select function and make corresponding transformation
+        function = random.choice(functions)
+        
+        img_X = getattr(img_X, function)(args[function])
+        img_Y = getattr(img_Y, function)(args[function])
+
+        # Make the same random crop for the image and the label
+        seed = random.randint(0,20171201)
+        random.seed(seed)
+        img_X = random_crop(img_X)
+        random.seed(seed)
+        img_Y = random_crop(img_Y)
+
+        # Convert PIL image back to tensor
+        self.X[index] = from_PIL(img_X)
+        self.Y[index] = from_PIL(img_Y)
+
+        return self.X[index], self.Y[index]
+
+class ValidationSet(data.Dataset):
+    def __init__(self, X_validation, Y_validation):
+        self.X = X_validation
+        self.Y = Y_validation
+
     def __len__(self):
         return len(self.X)
 
@@ -99,4 +137,3 @@ def img_crop(im, w, h):
             list_patches.append(im_patch)
 
     return torch.stack(list_patches)
-
