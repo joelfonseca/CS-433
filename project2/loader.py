@@ -11,17 +11,21 @@ from postprocessing import add_flips
 
 to_PIL = transforms.ToPILImage()
 from_PIL = transforms.ToTensor()
+random_crop = transforms.RandomCrop()
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
 class TrainingSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/training/images/*.png')
-        labels = glob.glob('./data/training/groundtruth/*.png')
+        imgs = glob.glob('./data/training/images2/*.png')
+        labels = glob.glob('./data/training/groundtruth2/*.png')
         print("*** Loading training images and groundtruth ***")
 
-        img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
-        img_patch_test = [img_crop(transforms.ToTensor()(Image.open(label)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
+        #img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
+        #img_patch_test = [img_crop(transforms.ToTensor()(Image.open(label)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
+
+        img_patch_train = [preprocess(Image.open(img), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]        
+        img_patch_test = [transforms.ToTensor()(Image.open(label), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
 
         self.X = torch.cat(img_patch_train)
         self.Y = torch.cat(img_patch_test)
@@ -67,6 +71,13 @@ class TrainingSet(data.Dataset):
         
         img_X = getattr(img_X, function)(args[function])
         img_Y = getattr(img_Y, function)(args[function])
+
+        # Make the same random crop for the image and the label
+        seed = random.randint(0,20171201)
+        random.seed(seed)
+        img_X = random_crop(img_X)
+        random.seed(seed)
+        img_Y = random_crop(img_Y)
 
         # Convert PIL image back to tensor
         self.X[index] = from_PIL(img_X)
