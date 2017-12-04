@@ -81,6 +81,7 @@ if __name__ == '__main__':
 		
 		# Define variables needed later
 		loss_score_track = []
+		loss_training_track = []
 		# Tuple containing best (epoch, epoch_score)
 		best_score = (0,0)
 		loss = 0
@@ -126,6 +127,7 @@ if __name__ == '__main__':
 			loss_validation_epoch = numpy.mean(loss_validation_track)
 			score_epoch = numpy.mean(score_track)
 			loss_score_track.append((loss_validation_epoch, score_epoch))
+			loss_training_track.append(loss_train_epoch)
 
 			bar1.set_postfix(score=score_epoch, best_epoch = best_score[0], best_score=best_score[1], loss_validation=loss_validation_epoch, loss_train = loss_train_epoch)
 			bar1.refresh()
@@ -133,7 +135,7 @@ if __name__ == '__main__':
 			if score_epoch > best_score[1]:
 				best_score = (epoch, score_epoch)
 				snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, model.state_dict())
-				plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track)
+				plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track, loss_training_track)
 
 			# Check that the model is making progress over time
 			if best_score[0] + 100 < epoch:
@@ -145,7 +147,7 @@ if __name__ == '__main__':
 		print("Training done.")
 
 		# Save results in figure until last saved model
-		plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track)
+		plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track, loss_training_track)
 
 	else:
 
