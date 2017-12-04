@@ -11,24 +11,24 @@ from postprocessing import add_flips
 
 to_PIL = transforms.ToPILImage()
 from_PIL = transforms.ToTensor()
-random_crop = transforms.RandomCrop()
+random_crop = transforms.RandomCrop(IMG_PATCH_SIZE)
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
 class TrainingSet(data.Dataset):
     def __init__(self):
-        imgs = glob.glob('./data/training/images2/*.png')
-        labels = glob.glob('./data/training/groundtruth2/*.png')
+        imgs = glob.glob('./data/training/images/*.png')
+        labels = glob.glob('./data/training/groundtruth/*.png')
         print("*** Loading training images and groundtruth ***")
 
         #img_patch_train = [img_crop(preprocess(Image.open(img)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]
         #img_patch_test = [img_crop(transforms.ToTensor()(Image.open(label)), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
 
-        img_patch_train = [preprocess(Image.open(img), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for img in tqdm(imgs)]        
-        img_patch_test = [transforms.ToTensor()(Image.open(label), IMG_PATCH_SIZE, IMG_PATCH_SIZE) for label in tqdm(labels)]
+        img_patch_train = [preprocess(Image.open(img)) for img in tqdm(imgs)]        
+        img_patch_test = [transforms.ToTensor()(Image.open(label)) for label in tqdm(labels)]
 
-        self.X = torch.cat(img_patch_train)
-        self.Y = torch.cat(img_patch_test)
+        self.X = torch.stack(img_patch_train)
+        self.Y = torch.stack(img_patch_test)
 
         # Need to round because groundtruth not binary (some values between 0 and 1)
         self.Y = torch.round(self.Y)
@@ -50,22 +50,23 @@ class TrainingSet(data.Dataset):
         self.Y = self.Y[validation_size:]
     
     def __len__(self):
-        return len(self.X)
+        return 10*len(self.X)
 
     def __getitem__(self, index):
 
         # Convert tensor to PIL image
-        img_X = to_PIL(self.X[index])
-        img_Y = to_PIL(self.Y[index])
+        random_idx = random.randint(0, 79)
+        img_X = to_PIL(self.X[random_idx])
+        img_Y = to_PIL(self.Y[random_idx])
 
         # List of transformations
         functions = ['transpose', 'rotate']
 
         # List of arguments for each transformation
         args_transpose = [Image.FLIP_LEFT_RIGHT, Image.FLIP_TOP_BOTTOM]
-        args_rotate = random.randint(0,180)
-        args = {'transpose': random.choice(args_transpose), 'rotate': args_rotate}
-        
+        args_rotate = [0, random.randint(0,180)]
+        args = {'transpose': random.choice(args_transpose), 'rotate': random.choice(args_rotate)}
+
         # Select function and make corresponding transformation
         function = random.choice(functions)
         
@@ -79,11 +80,10 @@ class TrainingSet(data.Dataset):
         random.seed(seed)
         img_Y = random_crop(img_Y)
 
-        # Convert PIL image back to tensor
-        self.X[index] = from_PIL(img_X)
-        self.Y[index] = from_PIL(img_Y)
+        #img_X.save('figures/X_' + str(random_idx) + '.png')
+        #img_Y.save('figures/Y_' + str(random_idx) + '.png')
 
-        return self.X[index], self.Y[index]
+        return from_PIL(img_X), from_PIL(img_Y)
 
 class ValidationSet(data.Dataset):
     def __init__(self, X_validation, Y_validation):

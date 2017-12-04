@@ -9,6 +9,6 @@ MAJORITY_VOTING = True
 
 SEED = 7
 
-CUDA = False
+CUDA = True
 
 OUTPUT_RAW_PREDICTION = False

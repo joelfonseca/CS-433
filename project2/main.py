@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 		# Create corresponding loaders
 		train_loader = DataLoader(train_set, num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
-		validation_loader = DataLoader(validation_set, num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
+		validation_loader = DataLoader(validation_set, num_workers=4, batch_size=1, shuffle=False)
 
 		# Create model
 		model = CompleteCNN()
@@ -115,9 +115,11 @@ if __name__ == '__main__':
 				y_pred = model.predict(data)
 				if CUDA:
 					score = f1_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round(), average='micro')
+					acc = accuracy_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round())
 				else:
 					score = f1_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round(), average='micro')
-				
+					acc = accuracy_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round())
+
 				loss = F.binary_cross_entropy_with_logits(y_pred, target).data[0]
 				loss_validation_track.append(loss)
 				score_track.append(score)
