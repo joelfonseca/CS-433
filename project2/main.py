@@ -58,8 +58,8 @@ if __name__ == '__main__':
 			targets = []
 
 			for (data, target) in train_loader:
-				datas.append(Variable(data, volatile=True).cuda())
-				targets.append(Variable(target, volatile=True).cuda())
+				datas.append(Variable(data).cuda())
+				targets.append(Variable(target).cuda())
 
 			# Create list of k indices for cross-validation
 			k_indices = build_k_indices(datas, K_FOLD, SEED)
