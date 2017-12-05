@@ -135,9 +135,7 @@ if __name__ == '__main__':
 
 						last_acc_epoch = acc_epoch
 
-						epoch += 1
-						if epoch == 5:
-							break
+						
 
 
 
