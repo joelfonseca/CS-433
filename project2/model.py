@@ -3,10 +3,9 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from parameters import LEARNING_RATE
 
 class CNN(nn.Module):
-	def __init__(self):
+	def __init__(self, learning_rate):
 		super(CNN, self).__init__()
 
 		self.loss_function = nn.BCEWithLogitsLoss()
@@ -50,7 +49,7 @@ class CNN(nn.Module):
 						nn.Conv2d(1, 1, 1)
 					)
 
-		self.optimizer = optim.Adam(self.parameters(), lr=LEARNING_RATE)
+		self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
 
 	def forward(self, input):
@@ -77,13 +76,19 @@ class CNN(nn.Module):
 		return F.sigmoid(self.forward(input))
 
 class CompleteCNN(nn.Module):
-	def __init__(self):
+	def __init__(self, learning_rate, activation):
 		super(CompleteCNN, self).__init__()
 
 		self.loss_function = nn.BCEWithLogitsLoss()
 
 		# Could use PReLU instead (better)
-		self.act = nn.ReLU(inplace=True)
+
+		if activation == 'relu':
+			self.act = nn.ReLU(inplace=True)
+		elif activation == 'leaky_relu':
+			self.act = nn.LeakyReLU(inplace=True)
+		elif activation == 'prelu':
+			self.act = nn.PReLU()
 
 		self.in_conv = nn.Sequential(
 			nn.Conv2d(3, 32, 3, padding=1),
@@ -164,7 +169,7 @@ class CompleteCNN(nn.Module):
 			self.act,
 			nn.Conv2d(32, 1, 1))
 
-		self.optimizer = optim.Adam(self.parameters(), lr=LEARNING_RATE)
+		self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
 	def forward(self, input):
 		#print("1", input.size())
@@ -205,7 +210,7 @@ class CompleteCNN(nn.Module):
 		return F.sigmoid(self.forward(input))
 
 class SimpleCNN(nn.Module):
-	def __init__(self):
+	def __init__(self, learning_rate):
 		super(SimpleCNN, self).__init__()
 
 		self.loss_function = nn.BCEWithLogitsLoss()
@@ -227,7 +232,7 @@ class SimpleCNN(nn.Module):
 			nn.ReLU())
 		self.fc2 = nn.Linear(512, 2)
 
-		self.optimizer = optim.Adam(self.parameters(), lr=LEARNING_RATE)
+		self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         
 	def forward(self, x):
 		out = self.layer1(x)
