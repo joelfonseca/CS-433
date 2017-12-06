@@ -79,6 +79,21 @@ if __name__ == '__main__':
 			else:
 				validation_data_and_targets.append((Variable(data), Variable(target)))'''
 		
+		train_loader_2 = []
+		validation_loader_2 = []
+
+		if CUDA:
+			for data, target in train_loader:
+				train_loader_2.append((Variable(data).cuda(), Variable(target).cuda()))
+			for data, target in validation_loader:
+				validation_loader_2.append((Variable(data, volatile=True).cuda(), Variable(target, volatile=True).cuda()))
+		
+		else:
+			for data, target in train_loader:
+				data, target = Variable(data), Variable(target)
+			for data, target in validation_loader:
+				data, target = Variable(data, volatile=True), Variable(target, volatile=True)
+		
 		# Define variables needed later
 		loss_score_track = []
 		loss_training_track = []
@@ -93,29 +108,19 @@ if __name__ == '__main__':
 
 			# Train the model
 			loss_train_track = []
-			for data, target in tqdm(train_loader, desc='BATCHES', leave=False):
-				if CUDA:
-					data, target = Variable(data).cuda(), Variable(target).cuda()
-				else:
-					data, target = Variable(data), Variable(target)
-
+			for data, target in tqdm(train_loader_2, desc='BATCHES', leave=False):
 				loss = model.step(data, target)
 				loss_train_track.append(loss)
 
 			# Make the validation
 			loss_validation_track = []
 			score_track = []
-			model.eval()
-			for data, target in validation_loader:
-				if CUDA:
-					data, target = Variable(data, volatile=True).cuda(), Variable(target, volatile=True).cuda()
-				else:
-					data, target = Variable(data, volatile=True), Variable(target, volatile=True)
-
+			#model.eval()
+			for data, target in validation_loader_2:
 				y_pred = model.predict(data)
 				if CUDA:
-					score = f1_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round(), average='micro')
-					acc = accuracy_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round())
+					score = f1_score(target.cpu().data.view(-1).numpy(), y_pred.cpu().data.view(-1).numpy().round(), average='micro')
+					acc = accuracy_score(target.cpu().data.view(-1).numpy(), y_pred.cpu().data.view(-1).numpy().round())
 				else:
 					score = f1_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round(), average='micro')
 					acc = accuracy_score(target.data.view(-1).numpy(), y_pred.data.view(-1).numpy().round())
@@ -140,7 +145,7 @@ if __name__ == '__main__':
 				plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, loss_score_track, loss_training_track)
 
 			# Check that the model is making progress over time
-			if best_score[0] + 100 < epoch:
+			if best_score[0] + 200 < epoch:
 				print('Model is overfitting. Stopped at epoch {} with loss_train={:.5f}, loss_validation={:.5f} and score={:.5f}.' .format(epoch, loss_train_epoch, loss_validation_epoch, score_epoch))
 				break
 

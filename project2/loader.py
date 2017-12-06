@@ -50,7 +50,7 @@ class TrainingSet(data.Dataset):
         self.Y = self.Y[validation_size:]
     
     def __len__(self):
-        return 10*len(self.X)
+        return 30*len(self.X)
 
     def __getitem__(self, index):
 
