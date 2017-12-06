@@ -1,9 +1,9 @@
 import torch
 import numpy
 from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
-from parameters import POSTPROCESSING
-
-from parameters import THRESHOLD_ROAD 
+from parameters import POSTPROCESSING, THRESHOLD_ROAD
+from torch.autograd import Variable
+from cross_validation import build_k_indices
 
 
 def prediction_to_np_patched(img):
@@ -85,3 +85,43 @@ def concatenate_images(img, gt_img):
 		img8 = img_float_to_uint8(img)
 		cimg = numpy.concatenate((img8, gt_img_3c), axis=1)
 	return cimg
+
+def train_valid_split(train_loader, ratio, seed):
+
+	data = []
+	targets = []
+
+	for (d, t) in train_loader:
+		data.append(Variable(d).cuda())
+		targets.append(Variable(t).cuda())
+
+	# Create list of k indices
+	k_indices = build_k_indices(data, ratio, seed)
+
+	# Select k value
+	k = 1
+
+	# Create the validation fold
+	valid_data = [data[i] for i in k_indices[k]]
+	valid_targets = [targets[i] for i in k_indices[k]]
+
+	# Create the training folds
+	k_indices_train = numpy.delete(k_indices, k, 0)
+	k_indices_train = k_indices_train.flatten()
+
+	train_data = [data[i] for i in k_indices_train]
+	train_targets = [targets[i] for i in k_indices_train]
+
+	return train_data, train_targets, valid_data, valid_targets
+
+def snapshot(saved_model_dir, run_time, run_name, best, state_dict):
+	
+	# Write the full name
+	if best :
+		complete_name = saved_model_dir + run_time + '_' + run_name + '_best'
+	else:
+		complete_name = saved_model_dir + run_time + '_' + run_name
+	
+	# Save the model
+	with open(complete_name + '.pt', 'wb') as f:
+		torch.save(state_dict, f)
