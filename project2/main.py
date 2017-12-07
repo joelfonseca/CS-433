@@ -35,7 +35,7 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 
-TRAIN = True
+TRAIN = False
 
 
 ########## Train our model ##########
@@ -125,13 +125,30 @@ if __name__ == '__main__':
 
 
 	if not TRAIN:
-		SAVED_MODEL = ""
-		#SAVED_MODEL = SAVED_MODEL_DIR + "model_CompleteCNN_25_50_50_0.0736"
-
-		model.load_state_dict(torch.load(SAVED_MODEL_DIR + RUN_TIME + '_' + RUN_NAME + '_best.pt'))
-		print("Model loaded.")
 
 		test_loader = DataLoader(TestSet(), num_workers=4, batch_size=1, shuffle=False)
+
+		SAVED_MODEL_DIR = "saved_models/"
+
+		SAVED_MODEL_NAMES = [
+
+			SAVED_MODEL_DIR + "2017-12-06_15-45_CompleteCNN_32_5e-03_leaky_relu_best.pt",
+
+			SAVED_MODEL_DIR + "2017-12-06_15-45_CompleteCNN_32_5e-04_relu_best.pt",
+		]
+
+		models = []
+		for model_name in SAVED_MODEL_NAMES:
+			tmp = model_name.split("_")
+			model = CompleteCNN(float(tmp[5]), tmp[6])
+			model.load_state_dict(torch.load(model_name))
+			#model =  torch.load(model_name)
+			model.cuda()
+			model.eval()
+			models.append(model)
+
+		
+		print("Model loaded.")
 
 		print("Applying model on test set and predicting...")
 
@@ -144,20 +161,23 @@ if __name__ == '__main__':
 			# To keep track of the original image
 			datas = []
 			for i, (data, _) in tqdm(enumerate(test_loader)):
-				# prediction is (1x1x608*608)
-				if CUDA:
-					prediction = model.predict(Variable(data, volatile=True).cuda())
-				else: 
-					prediction = model.predict(Variable(data, volatile=True))
 
-				# By squeezing prediction, it becomes (608x608), and we
-				# get kaggle pred which is also (608*608) but black/white by patch
-				if CUDA:
+				v = Variable(data, volatile=True).cuda()
+
+				predictions = []
+				for model in models:
+					# prediction is (1x1x608*608)
+					prediction = model.predict(v)	
+
+					# By squeezing prediction, it becomes (608x608), and we
+					# get kaggle pred which is also (608*608) but black/white by patch
 					kaggle_pred = prediction.cpu().squeeze()
-					kaggle_preds.append(kaggle_pred)
-				else:
-					kaggle_pred = prediction.squeeze()
-					kaggle_preds.append(kaggle_pred)
+
+					predictions.append(kaggle_pred)
+
+
+				kaggle_preds.append(torch.mean(torch.stack(predictions), 0))
+				
 				
 				datas.append(data)
 
