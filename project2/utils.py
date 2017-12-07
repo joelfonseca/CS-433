@@ -36,6 +36,8 @@ def prediction_to_np_patched(img):
 					for j in range(16):
 						new_img[16*h + i, 16*w + j] = 0
 
+						
+
 	#print(new_img)
 	if POSTPROCESSING:
 		delete_outlier(new_img, 16)
@@ -47,6 +49,39 @@ def prediction_to_np_patched(img):
 
 	# need to update
 	#print("Number of roads: %d over %d patches (%.2f%%)" % (roads, width * height, roads / (width * height) * 100.0))
+	return new_img
+
+def prediction_to_np_patched2(img):
+	width = int(608 / 16)
+	height = int(608 / 16)
+
+	# Should we round? Maybe it could be good to let the values
+	# between 0 and 1, and then use them directly to compute the sum..?
+	#new_img = torch.round(img).data.numpy()
+	#new_img = img.data.numpy()
+	new_img = img
+
+	# To define
+	threshold = THRESHOLD_ROAD
+
+	roads = 0
+	for h in range(height):
+		for w in range(width):
+			road_votes = 0
+			for i in range(16):
+				for j in range(16):
+					road_votes += new_img[16*h + i, 16*w + j]
+						
+			if road_votes >= threshold:
+				roads += 1
+				for i in range(16):
+					for j in range(16):
+						new_img[16*h + i, 16*w + j] = 1
+			else:
+				for i in range(16):
+					for j in range(16):
+						new_img[16*h + i, 16*w + j] = 0
+
 	return new_img
 
 
