@@ -126,6 +126,18 @@ class CompleteCNN(nn.Module):
 			nn.Conv2d(32, 32, 3, padding=1),
 			self.act)
 
+		self.down4 = nn.Sequential(
+			nn.MaxPool2d(2, stride=2),
+			nn.BatchNorm2d(32),
+			nn.Conv2d(32, 32, 3, padding=1),
+			self.act,
+			nn.BatchNorm2d(32),
+			nn.Conv2d(32, 32, 3, padding=1),
+			self.act,
+			nn.BatchNorm2d(32),
+			nn.Conv2d(32, 32, 3, padding=1),
+			self.act)
+
 		self.up1 = nn.Sequential(
 			nn.MaxPool2d(2, stride=2),
 			nn.BatchNorm2d(32),
@@ -160,6 +172,17 @@ class CompleteCNN(nn.Module):
 			nn.ConvTranspose2d(32, 32, 2, stride=2),
 			self.act)
 
+		self.up4 = nn.Sequential(
+			nn.BatchNorm2d(64),
+			nn.Conv2d(64, 48, 3, padding=1),
+			self.act,
+			nn.BatchNorm2d(48),
+			nn.Conv2d(48, 32, 3, padding=1),
+			self.act,
+			nn.BatchNorm2d(32),
+			nn.ConvTranspose2d(32, 32, 2, stride=2),
+			self.act)
+
 		self.out_conv = nn.Sequential(
 			nn.BatchNorm2d(64),
 			nn.Conv2d(64, 48, 3, padding=1),
@@ -181,17 +204,22 @@ class CompleteCNN(nn.Module):
 		#print("4", down2.size())
 		down3 = self.down3(down2)
 		#print("5", down3.size())
-		up1 = self.up1(down3)
+		down4 = self.down4(down3)
+		#print("down4", down4.size())
+		up1 = self.up1(down4)
 		#print("6", up1.size())
-		#print("new6", torch.cat([down3, up1], 1).size())
-		up2 = self.up2(torch.cat([down3, up1], 1))
+		#print("new6", torch.cat([down4, up1], 1).size())
+		up2 = self.up2(torch.cat([down4, up1], 1))
 		#print("7", up2.size())
-		#print("new7", torch.cat([down2, up2], 1).size())
-		up3 = self.up3(torch.cat([down2, up2], 1))
+		#print("new7", torch.cat([down3, up2], 1).size())
+		up3 = self.up3(torch.cat([down3, up2], 1))
 		#print("8", up3.size())
-		#print("new8", torch.cat([down1, up3], 1).size())
-		out_conv = self.out_conv(torch.cat([down1, up3], 1))
-		#print("9", out_conv.size())
+		#print("new8", torch.cat([down2, up3], 1).size())
+		up4 = self.up4(torch.cat([down2, up3], 1))
+		#print("9", up4.size())
+		#print("new9", torch.cat([down1, up4], 1).size())
+		out_conv = self.out_conv(torch.cat([down1, up4], 1))
+		#print("10", out_conv.size())
 
 		return out_conv
 

@@ -1,7 +1,7 @@
 import torch
 import numpy
 from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
-from parameters import POSTPROCESSING, THRESHOLD_ROAD
+from parameters import POSTPROCESSING, THRESHOLD_ROAD, CUDA
 from torch.autograd import Variable
 from cross_validation import build_k_indices
 
@@ -127,8 +127,12 @@ def train_valid_split(train_loader, ratio, seed):
 	targets = []
 
 	for (d, t) in train_loader:
-		data.append(Variable(d).cuda())
-		targets.append(Variable(t).cuda())
+		if CUDA:
+			data.append(Variable(d).cuda())
+			targets.append(Variable(t).cuda())
+		else:
+			data.append(Variable(d))
+			targets.append(Variable(t))
 
 	# Create list of k indices
 	k_indices = build_k_indices(data, ratio, seed)

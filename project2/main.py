@@ -35,7 +35,7 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 
-TRAIN = False
+TRAIN = True
 
 
 ########## Train our model ##########
@@ -67,7 +67,8 @@ if __name__ == '__main__':
 					print("Training with batch_size: ", batch_size, " and learning rate: ", learning_rate, " and activation: ", activation_function)
 					
 					model = CompleteCNN(learning_rate, activation_function)
-					model.cuda()
+					if CUDA:
+						model.cuda()
 					
 					MODEL_NAME = 'CompleteCNN'
 					RUN_NAME = MODEL_NAME + '_{}_{:.0e}_{}' .format(batch_size, learning_rate, activation_function)
@@ -90,7 +91,15 @@ if __name__ == '__main__':
 						accs_validation = []
 						for data, target in valid_data_and_targets:
 							y_pred = model.predict(data)
-							acc = accuracy_score(target.data.view(-1).cpu().numpy(), y_pred.data.view(-1).cpu().numpy().round())
+
+							if CUDA:
+								target_numpy = target.data.view(-1).cpu().numpy()
+								pred_numpy = y_pred.data.view(-1).cpu().numpy().round()
+							else:
+								target_numpy = target.data.view(-1).numpy()
+								pred_numpy = y_pred.data.view(-1).numpy().round()
+
+							acc = accuracy_score(target_data, pred_numpy)
 							accs_validation.append(acc)
 						
 						# Mean of the losses of training and validation predictions
@@ -114,8 +123,8 @@ if __name__ == '__main__':
 
 						# Check that the model is not doing worst over the time
 						if best_acc[0] + 10 < epoch :
-								print("Overfitting. Stopped at epoch {}." .format(epoch))
-								break
+							print("Overfitting. Stopped at epoch {}." .format(epoch))
+							break
 
 						epoch += 1 
 
@@ -143,7 +152,8 @@ if __name__ == '__main__':
 			model = CompleteCNN(float(tmp[5]), tmp[6])
 			model.load_state_dict(torch.load(model_name))
 			#model =  torch.load(model_name)
-			model.cuda()
+			if CUDA:
+				model.cuda()
 			model.eval()
 			models.append(model)
 
@@ -162,7 +172,10 @@ if __name__ == '__main__':
 			datas = []
 			for i, (data, _) in tqdm(enumerate(test_loader)):
 
-				v = Variable(data, volatile=True).cuda()
+				if CUDA:
+					v = Variable(data, volatile=True).cuda()
+				else:
+					v = Variable(data, volatile=True)
 
 				predictions = []
 				for model in models:
@@ -171,13 +184,15 @@ if __name__ == '__main__':
 
 					# By squeezing prediction, it becomes (608x608), and we
 					# get kaggle pred which is also (608*608) but black/white by patch
-					kaggle_pred = prediction.cpu().squeeze()
+					if CUDA:
+						kaggle_pred = prediction.cpu().squeeze()
+					else:
+						kaggle_pred = prediction.squeeze()
 
 					predictions.append(kaggle_pred)
 
-
+				# Append mean of predictions of all our models
 				kaggle_preds.append(torch.mean(torch.stack(predictions), 0))
-				
 				
 				datas.append(data)
 
