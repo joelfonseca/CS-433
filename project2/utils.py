@@ -1,19 +1,31 @@
-import torch
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+ 
+ 
+"""
+    Utilitary functions.
+"""
+
 import numpy
-from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
-from parameters import POSTPROCESSING, THRESHOLD_ROAD, CUDA
+
+import torch
 from torch.autograd import Variable
-from cross_validation import build_k_indices
 
+from parameters import POSTPROCESSING, THRESHOLD_ROAD, CUDA
+from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
 
-def prediction_to_np_patched(img):
-	width = int(img.size(0) / 16)
-	height = int(img.size(1) / 16)
+def prediction_to_np_patched(img, tensor=True):
+	
+	width = 0
+	height = 0
 
-	# Should we round? Maybe it could be good to let the values
-	# between 0 and 1, and then use them directly to compute the sum..?
-	#new_img = torch.round(img).data.numpy()
-	new_img = img.data.numpy()
+	if tensor:
+		width = int(img.size(0) / 16)
+		height = int(img.size(1) / 16)
+		new_img = torch.round(img).data.numpy()
+	else:
+		width = int(len(img) / 16)
+		height = int(len(img[0]) / 16)
 
 	# To define
 	threshold = THRESHOLD_ROAD
@@ -46,41 +58,6 @@ def prediction_to_np_patched(img):
 		region_cleaner(new_img, 16)
 		#naive_cleaner(new_img, 16)
 	#print(new_img)
-
-	# need to update
-	#print("Number of roads: %d over %d patches (%.2f%%)" % (roads, width * height, roads / (width * height) * 100.0))
-	return new_img
-
-def prediction_to_np_patched2(img):
-	width = int(608 / 16)
-	height = int(608 / 16)
-
-	# Should we round? Maybe it could be good to let the values
-	# between 0 and 1, and then use them directly to compute the sum..?
-	#new_img = torch.round(img).data.numpy()
-	#new_img = img.data.numpy()
-	new_img = img
-
-	# To define
-	threshold = THRESHOLD_ROAD
-
-	roads = 0
-	for h in range(height):
-		for w in range(width):
-			road_votes = 0
-			for i in range(16):
-				for j in range(16):
-					road_votes += new_img[16*h + i, 16*w + j]
-						
-			if road_votes >= threshold:
-				roads += 1
-				for i in range(16):
-					for j in range(16):
-						new_img[16*h + i, 16*w + j] = 1
-			else:
-				for i in range(16):
-					for j in range(16):
-						new_img[16*h + i, 16*w + j] = 0
 
 	return new_img
 
@@ -121,6 +98,17 @@ def concatenate_images(img, gt_img):
 		cimg = numpy.concatenate((img8, gt_img_3c), axis=1)
 	return cimg
 
+def build_k_indices(data_and_targets, k_fold, seed=1):
+    """Builds k indices for k-fold."""
+    num_row = len(data_and_targets)
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval: (k + 1) * interval]
+                 for k in range(k_fold)]
+
+    return np.array(k_indices)
+
 def train_valid_split(train_loader, ratio, seed):
 
 	data = []
@@ -135,7 +123,7 @@ def train_valid_split(train_loader, ratio, seed):
 			targets.append(Variable(t))
 
 	# Create list of k indices
-	k_indices = build_k_indices(data, ratio, seed)
+	k_indices = build_k_indices(data, 1//ratio, seed)
 
 	# Select k value
 	k = 1

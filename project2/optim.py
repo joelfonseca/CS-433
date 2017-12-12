@@ -1,9 +1,15 @@
-import numpy
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow
-from PIL import Image
-from tqdm import tqdm
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+ 
+ 
+"""
+    Comparison of different optimizers: Adam, SGD and SGD + Momentum.
+"""
+
+import numpy as np
+from random import shuffle
 from sklearn.metrics import accuracy_score
+from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
@@ -12,53 +18,44 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, TestSet
-from parameters import CUDA, K_FOLD, SEED
-from model import CNN, SimpleCNN, CompleteCNN
-from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, train_valid_split, snapshot
+from parameters import CUDA, RATIO, SEED
+from model import CNN
+from utils import train_valid_split
 from plot import plot_optim_acc, plot_optim_loss
-
-import gc
-import datetime
-from random import shuffle
-
-FIGURE_DIR = 'figures/'
-RUN_TIME = '{:%Y-%m-%d_%H-%M}' .format(datetime.datetime.now())
-
 
 OPTIMIZERS = ['Adam', 'SGD', 'SGD + Momentum']
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-03
 ACTIVATION_FUNCTION = 'leaky'
+NUM_EPOCHS = 100
 
 if __name__ == '__main__':
 
+        # Load the data
         train_loader = DataLoader(TrainingSet(), num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
 
         # Create training and validation split
-        train_data, train_targets, valid_data, valid_targets = train_valid_split(train_loader, K_FOLD, SEED)
+        train_data, train_targets, valid_data, valid_targets = train_valid_split(train_loader, RATIO, SEED)
 
         # Combine train/validation data and targets as tuples
         train_data_and_targets = list(zip(train_data, train_targets))
         valid_data_and_targets = list(zip(valid_data, valid_targets))
 
-
-        histories = []
+        optimizer_results = []
         for optimizer in OPTIMIZERS:
 
-            print("Training with batch_size: ", BATCH_SIZE, " and learning rate: ", LEARNING_RATE, " and activation: ", ACTIVATION_FUNCTION)
+            print('Training with batch size: ', BATCH_SIZE, ', learning rate: ', LEARNING_RATE, ', activation function: ', ACTIVATION_FUNCTION, ' and optimizer: ', optimizer, '.')
             
-            model = CompleteCNN(LEARNING_RATE, ACTIVATION_FUNCTION, optimizer)
-
+            # Create the model
+            model = CNN(LEARNING_RATE, ACTIVATION_FUNCTION, optimizer)
+            
             if CUDA:
                 model.cuda()
-            
-            MODEL_NAME = 'CompleteCNN'
-            RUN_NAME = MODEL_NAME + '_{}_{:.0e}_{}_{}' .format(BATCH_SIZE, LEARNING_RATE, ACTIVATION_FUNCTION, str(optimizer))
 
             epoch = 0
             best_acc = (0,0)
             history = []
-            while True:
+            for i in range(NUM_EPOCHS):
                 
                 # Shuffle the training data and targets in the same way
                 shuffle(train_data_and_targets)
@@ -85,12 +82,14 @@ if __name__ == '__main__':
                     accs_validation.append(acc)
                 
                 # Mean of the losses of training and validation predictions
-                loss_epoch = numpy.mean(losses_training)
-                acc_epoch = numpy.mean(accs_validation)
+                loss_epoch = np.mean(losses_training)
+                acc_epoch = np.mean(accs_validation)
                 history.append((loss_epoch, acc_epoch))
-                print("Epoch: {} Training loss: {:.5f} Validation accuracy: {:.5f}" .format(epoch, loss_epoch, acc_epoch))
+                print('Epoch: {} Training loss: {:.5f} Validation accuracy: {:.5f}' .format(epoch, loss_epoch, acc_epoch))
 
-            histories.append((optimizer, history))
+            # Append the optimizer results
+            optimizer_results.append((optimizer, history))
 
-        plot_optim_acc(histories)
-        plot_optim_loss(histories)			
+        # Save the two plots
+        plot_optim_acc(optimizer_results)
+        plot_optim_loss(optimizer_results)			

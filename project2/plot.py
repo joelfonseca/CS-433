@@ -1,22 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+ 
+ 
+"""
+    Plot functions for training loss and validation accuracy of models with different optimizers.
+"""
+
 import matplotlib.pyplot as plt
 
-def plot_results(model_dir, run_time, run_name, history):
-
-    complete_name = model_dir + run_time + '_' + run_name + '_results'
-
-    losses = [i[0] for i in history]
-    accs = [i[1] for i in history]
-
-    num_epochs = range(1, len(history)+1)
-
-    plt.plot(num_epochs, losses, color='r', label='Training loss')
-    plt.plot(num_epochs, accs, color='b', label='Validation accuracy')
-    plt.xlabel('epoch')
-    plt.title('CNN')
-    leg = plt.legend(loc='center right', shadow=True)
-    leg.draw_frame(False)
-    plt.savefig(complete_name + '.png')
-    plt.gcf().clear()
+FIGURE_DIR = 'figures/'
 
 def plot_optim_acc(histories):
 
@@ -31,7 +23,7 @@ def plot_optim_acc(histories):
     plt.title('Validation accuracy')
     leg = plt.legend(loc='lower right', shadow=True)
     leg.draw_frame(False)
-    plt.savefig(complete_name + '.png')
+    plt.savefig(FIGURE_DIR + complete_name + '.png')
     plt.gcf().clear()
 
 def plot_optim_loss(histories):
@@ -47,5 +39,5 @@ def plot_optim_loss(histories):
     plt.title('Training loss')
     leg = plt.legend(loc='upper right', shadow=True)
     leg.draw_frame(False)
-    plt.savefig(complete_name + '.png')
+    plt.savefig(FIGURE_DIR + complete_name + '.png')
     plt.gcf().clear()
