@@ -12,11 +12,11 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, TestSet
-from parameters import BATCH_SIZES, CUDA, K_FOLD, SEED, OUTPUT_RAW_PREDICTION, CROSS_VALIDATION, MAJORITY_VOTING, LEARNING_RATES, ACTIVATION_FUNCTIONS
+from parameters import BATCH_SIZES, CUDA, K_FOLD, SEED, OUTPUT_RAW_PREDICTION, CROSS_VALIDATION, MAJORITY_VOTING, LEARNING_RATES, ACTIVATION_FUNCTIONS, OPTIMIZERS
 from model import CNN, SimpleCNN, CompleteCNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, train_valid_split, snapshot
 from postprocessing import majority_voting
-from plot import plot_results
+from plot import plot_results, plot_optim_acc, plot_optim_loss
 
 import gc
 import datetime
@@ -64,71 +64,81 @@ if __name__ == '__main__':
 			for learning_rate in LEARNING_RATES:
 				for activation_function in ACTIVATION_FUNCTIONS:
 
-					print("Training with batch_size: ", batch_size, " and learning rate: ", learning_rate, " and activation: ", activation_function)
-					
-					model = CompleteCNN(learning_rate, activation_function)
-					if CUDA:
-						model.cuda()
-					
-					MODEL_NAME = 'CompleteCNN'
-					RUN_NAME = MODEL_NAME + '_{}_{:.0e}_{}' .format(batch_size, learning_rate, activation_function)
+					#histories = []
+					for optimizer in OPTIMIZERS:
 
-					epoch = 0
-					best_acc = (0,0)
-					history = []
-					while True:
+						print("Training with batch_size: ", batch_size, " and learning rate: ", learning_rate, " and activation: ", activation_function)
 						
-						# Shuffle the training data and targets in the same way
-						shuffle(train_data_and_targets)
+						model = CompleteCNN(learning_rate, activation_function, optimizer)
 
-						# Train the model
-						losses_training = []
-						for data, target in train_data_and_targets:
-							loss = model.step(data, target)
-							losses_training.append(loss)
-
-						# Make validation
-						accs_validation = []
-						for data, target in valid_data_and_targets:
-							y_pred = model.predict(data)
-
-							if CUDA:
-								target_numpy = target.data.view(-1).cpu().numpy()
-								pred_numpy = y_pred.data.view(-1).cpu().numpy().round()
-							else:
-								target_numpy = target.data.view(-1).numpy()
-								pred_numpy = y_pred.data.view(-1).numpy().round()
-
-							acc = accuracy_score(target_data, pred_numpy)
-							accs_validation.append(acc)
+						if CUDA:
+							model.cuda()
 						
-						# Mean of the losses of training and validation predictions
-						loss_epoch = numpy.mean(losses_training)
-						acc_epoch = numpy.mean(accs_validation)
-						history.append((loss_epoch, acc_epoch))
-						print("Epoch: {} Training loss: {:.5f} Validation accuracy: {:.5f}" .format(epoch, loss_epoch, acc_epoch))
+						MODEL_NAME = 'CompleteCNN'
+						RUN_NAME = MODEL_NAME + '_{}_{:.0e}_{}_{}' .format(batch_size, learning_rate, activation_function, str(optimizer))
+
+						epoch = 0
+						best_acc = (0,0)
+						history = []
+						while True:
+							
+							# Shuffle the training data and targets in the same way
+							shuffle(train_data_and_targets)
+
+							# Train the model
+							losses_training = []
+							for data, target in train_data_and_targets:
+								loss = model.step(data, target)
+								losses_training.append(loss)
+
+							# Make validation
+							accs_validation = []
+							for data, target in valid_data_and_targets:
+								y_pred = model.predict(data)
+
+								if CUDA:
+									target_numpy = target.data.view(-1).cpu().numpy()
+									pred_numpy = y_pred.data.view(-1).cpu().numpy().round()
+								else:
+									target_numpy = target.data.view(-1).numpy()
+									pred_numpy = y_pred.data.view(-1).numpy().round()
+
+								acc = accuracy_score(target_numpy, pred_numpy)
+								accs_validation.append(acc)
+							
+							# Mean of the losses of training and validation predictions
+							loss_epoch = numpy.mean(losses_training)
+							acc_epoch = numpy.mean(accs_validation)
+							history.append((loss_epoch, acc_epoch))
+							print("Epoch: {} Training loss: {:.5f} Validation accuracy: {:.5f}" .format(epoch, loss_epoch, acc_epoch))
 
 
-						# Save the best model
-						if acc_epoch > best_acc[1]:
-							best_acc = (epoch, acc_epoch)
-							snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, True, model.state_dict())
-							plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
-						
-						# Save every 5 epoch
-						if epoch % 5 == 0:
-							run_name_and_info = RUN_NAME + '_{:02}_{:.5f}' .format(epoch, acc_epoch)
-							snapshot(SAVED_MODEL_DIR, RUN_TIME, run_name_and_info, False, model.state_dict())
-							plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
+							# Save the best model
+							if acc_epoch > best_acc[1]:
+								best_acc = (epoch, acc_epoch)
+								snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, True, model.state_dict())
+								plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
+							
+							# Save every 5 epoch
+							if epoch % 5 == 0:
+								run_name_and_info = RUN_NAME + '_{:02}_{:.5f}' .format(epoch, acc_epoch)
+								snapshot(SAVED_MODEL_DIR, RUN_TIME, run_name_and_info, False, model.state_dict())
+								plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
 
-						# Check that the model is not doing worst over the time
-						if best_acc[0] + 10 < epoch :
-							print("Overfitting. Stopped at epoch {}." .format(epoch))
-							break
+							# Check that the model is not doing worst over the time
+							if best_acc[0] + 10 < epoch :
+								print("Overfitting. Stopped at epoch {}." .format(epoch))
+								break
 
-						epoch += 1 
+							epoch += 1 
 
-					plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
+						plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
+						#histories.append((optimizer, history))
+
+					#print(histories)
+					#plot_optim_acc(histories)
+					#plot_optim_loss(histories)
+				
 						
 	########## Apply on test set ##########
 

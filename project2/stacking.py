@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+import glob
 
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
@@ -13,6 +14,10 @@ from torch.autograd import Variable
 from loader import TrainingSet, TestSet
 from model import CompleteCNN
 from utils import prediction_to_np_patched2, patched_to_submission_lines, concatenate_images, train_valid_split
+from postprocessing import majority_voting2
+from parameters import K_FOLD, SEED
+
+import pprint
 
 PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
@@ -31,24 +36,25 @@ TRAIN = False
 
 if __name__ == '__main__':
 
-    SAVED_MODEL_NAMES = [
+    # load all the best models from grid search
+    all_models = glob.glob('saved_models/*_best.pt')
+    print('{} models loaded from grid search.' .format(len(all_models)))
 
-            SAVED_MODEL_DIR + '2017-12-06_20-02_CompleteCNN_32_1e-03_leaky_relu_best.pt',
+    """
+    regr30 = joblib.load('regr30.pkl')
+    c = regr30.coef_
+    #print(c)
 
-            SAVED_MODEL_DIR + '2017-12-06_20-02_CompleteCNN_32_1e-03_prelu_best.pt',
+    model_weight = list(zip(all_models, c))
+    model_weight.sort(key=lambda x: -x[1])
+    #pprint.pprint(model_weight)
 
-            SAVED_MODEL_DIR + '2017-12-06_20-02_CompleteCNN_32_1e-03_relu_best.pt', 
-
-            SAVED_MODEL_DIR + '2017-12-07_09-42_CompleteCNN_64_1e-02_leaky_relu_best.pt',
-
-            SAVED_MODEL_DIR + '2017-12-07_09-42_CompleteCNN_64_1e-03_leaky_relu_best.pt',
-
-            SAVED_MODEL_DIR + '2017-12-07_09-42_CompleteCNN_64_1e-03_relu_best.pt'
-
-        ]
+    top10_models = [x[0] for x in model_weight[:10]]
+    #pprint.pprint(top10_models)
+    """
 
     models = []
-    for model_name in SAVED_MODEL_NAMES:
+    for model_name in all_models:
         tmp = model_name.split('_')
         model = CompleteCNN(float(tmp[5]), tmp[6])
         model.load_state_dict(torch.load(model_name))
@@ -107,26 +113,38 @@ if __name__ == '__main__':
         regr = joblib.load('regr.pkl')
         c = regr.coef_
         print(c)
-        
+
+
         test_loader = DataLoader(TestSet(), num_workers=4, batch_size=1, shuffle=False)
         lines = []
 
+        y_preds = []
+        flips = [] 
         X_test = []
         for i, (data, _) in enumerate(tqdm(test_loader)):
             
             X_test = compute_input(Variable(data, volatile=True).cuda(), models)
-            kaggle_pred = prediction_to_np_patched2(regr.predict(X_test).reshape((608, 608)))
+            y_pred = regr.predict(X_test).reshape((608, 608))
 
-            # Save the prediction image (concatenated with the real image)
-            concat_data = concatenate_images(data.squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
-            Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + 'prediction_' + str(i+1) + '.png')
+            y_preds.append(y_pred)
+            flips.append(data)
 
-            # Store the lines in the form Kaggle wants it: "{:03d}_{}_{},{}"
-            for new_line in patched_to_submission_lines(kaggle_pred, i+1):
-                lines.append(new_line)
+            if (i+1)%4 == 0:
+                
+                kaggle_pred = prediction_to_np_patched2(majority_voting2(y_preds))
+                
+                # Save the prediction image (concatenated with the real image)
+                concat_data = concatenate_images(flips[i-3].squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
+                Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + 'prediction_' + str((i+1)//4) + '.png')
+
+                # Store the lines in the form Kaggle wants it: "{:03d}_{}_{},{}"
+                for new_line in patched_to_submission_lines(kaggle_pred, ((i+1)//4)):
+                    lines.append(new_line)
+                
+                y_preds = []
                 
         # Create submission file
-        with open('data/submissions/submission_stacking.csv', 'w') as f:
+        with open('data/submissions/submission_stacking_top10_mv.csv', 'w') as f:
             f.write('id,prediction\n')
             f.writelines('{}\n'.format(line) for line in lines)
 

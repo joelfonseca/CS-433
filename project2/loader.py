@@ -34,6 +34,13 @@ class TrainingSet(data.Dataset):
 
         self.X = torch.cat(img_patch_train)
         self.Y = torch.cat(img_patch_test)
+
+        #img_patch_train = [preprocess(img) for img in tqdm(imgs)]
+        #img_patch_test = [transforms.ToTensor()(label) for label in tqdm(labels)]
+
+        #self.X = torch.stack(img_patch_train)
+        #self.Y = torch.stack(img_patch_test)
+
         
         # Need to round because groundtruth not binary (some values between 0 and 1)
         self.Y = torch.round(self.Y)
@@ -65,8 +72,8 @@ class TestSet(data.Dataset):
         for i in range(50):
             imgs.append('./data/test_set_images/test_%d/test_%d.png' % (i+1, i+1))
         
-        for img in imgs:
-            print(img)
+        #for img in imgs:
+        #    print(img)
 
         print("*** Loading test images ***")
 

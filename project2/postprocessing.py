@@ -335,3 +335,21 @@ def majority_voting(imgs):
     img_mean = torch.mean(imgs, 0)
 
     return img_mean
+
+def majority_voting2(imgs):
+
+    # Retrieve the different images in correct order
+    img = imgs[0]
+    horizontal_flip_img = imgs[1]
+    vertical_flip_img = imgs[2]
+    horizontal_and_vertical_flip_img = imgs[3]
+
+    # Retrieve the original image for every flip
+    img1 = img
+    img2 = np.flip(horizontal_flip_img, 1).copy()
+    img3 = np.flip(vertical_flip_img, 0).copy()
+    img4 = np.flip(np.flip(horizontal_and_vertical_flip_img, 1), 0).copy()
+
+    img_mean = np.mean([img1, img2, img3, img4], axis=0)
+    
+    return img_mean
