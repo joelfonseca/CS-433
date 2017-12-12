@@ -52,10 +52,8 @@ if __name__ == '__main__':
             if CUDA:
                 model.cuda()
 
-            epoch = 0
-            best_acc = (0,0)
             history = []
-            for i in range(NUM_EPOCHS):
+            for epoch in range(NUM_EPOCHS):
                 
                 # Shuffle the training data and targets in the same way
                 shuffle(train_data_and_targets)
@@ -81,7 +79,7 @@ if __name__ == '__main__':
                     acc = accuracy_score(target_numpy, pred_numpy)
                     accs_validation.append(acc)
                 
-                # Mean of the losses of training and validation predictions
+                # Mean of the losses of training and accuracies of validation predictions
                 loss_epoch = np.mean(losses_training)
                 acc_epoch = np.mean(accs_validation)
                 history.append((loss_epoch, acc_epoch))
@@ -91,5 +89,5 @@ if __name__ == '__main__':
             optimizer_results.append((optimizer, history))
 
         # Save the two plots
-        plot_optim_acc(optimizer_results)
-        plot_optim_loss(optimizer_results)			
+        plot_optim_acc(NUM_EPOCHS, optimizer_results)
+        plot_optim_loss(NUM_EPOCHS, optimizer_results)			
