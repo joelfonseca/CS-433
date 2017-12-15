@@ -8,8 +8,8 @@
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
+import torch.optim as optim
 
 class CNN(nn.Module):
 	def __init__(self, learning_rate, activation, optimizer='Adam', momentum=0.9):
