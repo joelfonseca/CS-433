@@ -8,7 +8,7 @@
 
 import matplotlib.pyplot as plt
 
-FIGURE_DIR = 'figures/'
+from paths import FIGURE_DIR
 
 def plot_optim_acc(num_epochs, results):
     """Generates a plot with validation accuracy for different models."""
