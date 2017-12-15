@@ -11,25 +11,14 @@ import numpy
 import torch
 from torch.autograd import Variable
 
+from postprocessing import outlier_cleaner, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
 from parameters import POSTPROCESSING, THRESHOLD_ROAD, CUDA
-from postprocessing import delete_outlier, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
 
-def prediction_to_np_patched(img, tensor=True):
+def prediction_to_np_patched(img):
 	"""Converts the raw predictions into patched predictions of size 16x16."""
 
-	width = 0
-	height = 0
-
-	if tensor:
-		width = int(img.size(0) / 16)
-		height = int(img.size(1) / 16)
-		new_img = torch.round(img).data.numpy()
-	else:
-		width = int(len(img) / 16)
-		height = int(len(img[0]) / 16)
-
-	# To define
-	threshold = THRESHOLD_ROAD
+	width = int(img.shape[0] / 16)
+	height = int(img.shape[1] / 16)
 
 	roads = 0
 	for h in range(height):
@@ -39,7 +28,7 @@ def prediction_to_np_patched(img, tensor=True):
 				for j in range(16):
 					road_votes += new_img[16*h + i, 16*w + j]
 						
-			if road_votes >= threshold:
+			if road_votes >= THRESHOLD_ROAD:
 				roads += 1
 				for i in range(16):
 					for j in range(16):
@@ -49,18 +38,14 @@ def prediction_to_np_patched(img, tensor=True):
 					for j in range(16):
 						new_img[16*h + i, 16*w + j] = 0
 
-						
-
-
 	if POSTPROCESSING:
-		delete_outlier(new_img, 16)
+		outlier_cleaner(new_img, 16)
 		tetris_shape_cleaner(new_img, 16)
 		#border_cleaner(new_img, 16)
 		region_cleaner(new_img, 16)
 		#naive_cleaner(new_img, 16)
 
 	return new_img
-
 
 def patched_to_submission_lines(img, img_number):
 	"""Creates the lines for the submission file for an image."""
@@ -77,7 +62,6 @@ def patched_to_submission_lines(img, img_number):
 				label = 0
 
 			yield ("{:03d}_{}_{},{}".format(img_number, w*16, h*16, label))
-
 
 def img_float_to_uint8(img):
 	"""Converts an image float into uint8 format."""
@@ -164,3 +148,37 @@ def snapshot(saved_model_dir, run_time, run_name, best, state_dict):
 	# Save the model
 	with open(complete_name + '.pt', 'wb') as f:
 		torch.save(state_dict, f)
+
+def create_input_regr(data, models):
+	"""Creates the matrix which will be given as input for the regression."""
+	
+	# X will be a matrix of size NxM where N is the number of datapoints and M
+	# the number of models
+    X = []
+    for i, model in enumerate(models):
+
+        if i == 0:
+            X = np.c_[model.predict(data).data.view(-1).cpu().numpy()]
+        else:
+            X = np.c_[X, model.predict(data).data.view(-1).cpu().numpy()]
+
+    return X
+
+def load_best_models(saved_model_dir):
+	"""Loads all the best models from a given directory."""
+
+	# Retrieve all the best models from the directory
+	all_models = glob.glob('saved_models/*_best.pt')
+
+	# Load and prepare them for prediction
+    models = []
+    for model_name in all_models:
+
+        tmp = model_name.split('_')
+        model = CNN(float(tmp[5]), tmp[6])
+        model.load_state_dict(torch.load(model_name))
+        model.cuda()
+        model.eval()
+        models.append(model)
+
+	return models
