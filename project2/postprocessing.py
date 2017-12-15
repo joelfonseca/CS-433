@@ -1,14 +1,24 @@
-"""Contains all the postprocessing functions used."""
-from PIL import Image
-import torch
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+ 
+ 
+"""
+    Contains all the postprocessing functions developed.
+"""
+
 import numpy as np
+from PIL import Image
+
+import torch
 
 def is_outlier(img, x, y, color, IMG_PATCH_SIZE):
+    """Returns True if the patch at (x,y) in the given image is surrounded completely
+    by patches of different color."""
+    
     outlier = True
     for i in [-IMG_PATCH_SIZE, 0, IMG_PATCH_SIZE]:
         for j in [-IMG_PATCH_SIZE, 0, IMG_PATCH_SIZE]:
             if i is not j:
-                #print('color ', img[x+i][y+j], ' at (', x+i, ', ', y+j, ')')
                 if img[x+i][y+j] == color:
                     outlier = False
                     return outlier
@@ -16,12 +26,15 @@ def is_outlier(img, x, y, color, IMG_PATCH_SIZE):
     return outlier
 
 def update_pixel_batch(img, x, y, opp_color):
+    """Updates the entire patch at (x,y) in the given image to the color passed in argument."""
+    
     for i in range(0,16):
         for j in range(0,16):
             img[x+i][y+j] = opp_color
 
-def delete_outlier(img, IMG_PATCH_SIZE):
-    # img is of size 608x608
+def outlier_cleaner(img, IMG_PATCH_SIZE):
+    """Cleans the image from outliers."""
+    
     img_size = img.shape[0]
 
     for i in range(IMG_PATCH_SIZE, img_size-IMG_PATCH_SIZE, IMG_PATCH_SIZE):
@@ -29,10 +42,7 @@ def delete_outlier(img, IMG_PATCH_SIZE):
             color = img[i][j]
             opp_color = 0 if color==1 else 1
             if is_outlier(img, i, j, color, IMG_PATCH_SIZE):
-                #print('one outlier found at: ', i, ' ', j)
-                #print('color before: ', img[i][j])
                 update_pixel_batch(img, i, j, opp_color)
-                #print('color after: ', img[i][j], img[i+2][j+2])
 
 def tetris_shape_cleaner(img, IMG_PATCH_SIZE):
     # img is of size 608x608
@@ -297,13 +307,13 @@ def naive_cleaner(img, IMG_PATCH_SIZE):
                 update_pixel_batch(img, i+IMG_PATCH_SIZE, j, ROAD)
 
 def add_flips(imgs):
+    """Creates flipped tranformations for all images passed in argument."""
 
-    # This list will contain all the images (original + flipped versions)
+    # This list will contain all the images (original + flipped tranformations)
     flipped_imgs = []
 
     for img in imgs:
-
-        # For every image we create the 4 possible flips
+        # For every image we create the four transformations
         img = Image.open(img)
         horizontal_flip_img = img.transpose(Image.FLIP_LEFT_RIGHT)
         vertical_flip_img = img.transpose(Image.FLIP_TOP_BOTTOM)
@@ -315,28 +325,7 @@ def add_flips(imgs):
     return flipped_imgs
 
 def majority_voting(imgs):
-
-    # Retrieve the different images in correct order
-    img = imgs[0]
-    horizontal_flip_img = imgs[1]
-    vertical_flip_img = imgs[2]
-    horizontal_and_vertical_flip_img = imgs[3]
-
-    # Retrieve the original image for every flip
-    img1 = img
-    img2 = torch.from_numpy(np.flip(horizontal_flip_img.data.numpy(), 1).copy())
-    img3 = torch.from_numpy(np.flip(vertical_flip_img.data.numpy(), 0).copy())
-    img4 = torch.from_numpy(np.flip(np.flip(horizontal_and_vertical_flip_img.data.numpy(), 1), 0).copy())
-
-    # Stack the 4 images together along a new dimension
-    imgs = torch.stack([img1, img2, img3, img4])
-    
-    # Mean of the 4 images along this new dimension
-    img_mean = torch.mean(imgs, 0)
-
-    return img_mean
-
-def majority_voting2(imgs):
+    """Merges the predictions of the same image from four transformations."""
 
     # Retrieve the different images in correct order
     img = imgs[0]
@@ -350,6 +339,7 @@ def majority_voting2(imgs):
     img3 = np.flip(vertical_flip_img, 0).copy()
     img4 = np.flip(np.flip(horizontal_and_vertical_flip_img, 1), 0).copy()
 
+    # Compute the mean for each pixel
     img_mean = np.mean([img1, img2, img3, img4], axis=0)
     
     return img_mean
