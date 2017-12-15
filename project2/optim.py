@@ -8,21 +8,20 @@
 
 import numpy as np
 from random import shuffle
-from sklearn.metrics import accuracy_score
 from tqdm import tqdm
+
+from sklearn.metrics import accuracy_score
 
 import torch
 from torch.utils.data import DataLoader
-from torch.autograd import Variable
-import torch.nn.functional as F
-from torchvision import transforms
 
-from loader import TrainingSet, TestSet
-from parameters import CUDA, RATIO, SEED
-from model import CNN
+from loader import TrainingSet
 from utils import train_valid_split
 from plot import plot_optim_acc, plot_optim_loss
+from model import CNN
+from parameters import CUDA, RATIO, SEED
 
+# Parameters for this specific module
 OPTIMIZERS = ['Adam', 'SGD', 'SGD + Momentum']
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-03
