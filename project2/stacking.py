@@ -32,15 +32,6 @@ if __name__ == '__main__':
     # Load the data
     train_loader = DataLoader(TrainingSet(whole=True), num_workers=4, batch_size=1, shuffle=False)
 
-    # Wrapp tensors
-    for (data, target) in train_loader:
-		if CUDA:
-			data = Variable(data).cuda()
-			target = Variable(target).cuda()
-		else:
-			data = Variable(data)
-			target = Variable(target)
-
     # Initialize and build matrices for regression
     X_train = []
     y_train = []
@@ -48,21 +39,28 @@ if __name__ == '__main__':
     for i, (data, target) in enumerate(tqdm(train_loader)):
 
         if i == 0:
-            X_train = np.r_[create_input_regr(data, models)]
+            
             if CUDA:
-                y_train = np.r_[target.data.view(-1).cpu().numpy()]
+                X_train = np.r_[create_input_regr(Variable(data).cuda(), models)]
+                y_train = np.r_[Variable(target, volatile=True).cuda().data.view(-1).cpu().numpy()]
             else:
-                y_train = np.r_[target.data.view(-1).numpy()]
+                X_train = np.r_[X_train, create_input_regr(Variable(data), models)]
+                y_train = np.r_[Variable(target, volatile=True).data.view(-1).numpy()]
         else:
-            X_train = np.r_[X_train, create_input_regr(data, models)]
+            
             if CUDA:
-                y_train = np.r_[y_train, target.data.view(-1).cpu().numpy()]
+                X_train = np.r_[X_train, create_input_regr(Variable(data).cuda(), models)]
+                y_train = np.r_[y_train, Variable(target, volatile=True).cuda().data.view(-1).cpu().numpy()]
             else:
-                y_train = np.r_[y_train, target.data.view(-1).numpy()]
+                X_train = np.r_[X_train, create_input_regr(Variable(data), models)]
+                y_train = np.r_[y_train, Variable(target, volatile=True).data.view(-1).numpy()]
     
     # Create and train the regression
     regr = linear_model.LinearRegression()  
     regr.fit(X_train, y_train)
 
     # Save the classifier
-    joblib.dump(regr, 'regr.pkl')
+    joblib.dump(regr, SAVED_MODEL_DIR + 'regr.pkl')
+
+    # End message
+    print('Regression model trained.')

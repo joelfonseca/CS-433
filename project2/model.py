@@ -19,17 +19,10 @@ class CNN(nn.Module):
 
 		if activation == 'relu':
 			self.act = nn.ReLU(inplace=True)
-		elif activation == 'leaky_relu':
+		elif activation == 'leaky':
 			self.act = nn.LeakyReLU(inplace=True)
 		elif activation == 'prelu':
 			self.act = nn.PReLU()
-
-		if optimizer == 'Adam':
-			self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
-		elif optimizer == 'SGD':
-			self.optimizer = optim.SGD(self.parameters(), lr=learning_rate)
-		elif optimizer == 'SGD + Momentum':
-			self.optimizer = optim.SGD(self.parameters(), lr=learning_rate, momentum=momentum)
 
 		self.in_conv = nn.Sequential(
 			nn.Conv2d(3, 32, 3, padding=1),
@@ -109,6 +102,13 @@ class CNN(nn.Module):
 			nn.Conv2d(48, 32, 3, padding=1),
 			self.act,
 			nn.Conv2d(32, 1, 1))
+
+		if optimizer == 'Adam':
+			self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+		elif optimizer == 'SGD':
+			self.optimizer = optim.SGD(self.parameters(), lr=learning_rate)
+		elif optimizer == 'SGD + Momentum':
+			self.optimizer = optim.SGD(self.parameters(), lr=learning_rate, momentum=momentum)
 
 	def forward(self, input):
 		in_conv = self.in_conv(input)

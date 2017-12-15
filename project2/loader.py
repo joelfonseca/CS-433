@@ -23,9 +23,9 @@ from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, MAJORITY_VOTING
 # Set of transformations
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-class TrainingSet(data.Dataset, whole=False):
+class TrainingSet(data.Dataset):
 
-    def __init__(self, whole):
+    def __init__(self, whole=False):
 
         # Load images and labels
         imgs = glob.glob('./data/training/images/*.png')
@@ -42,7 +42,7 @@ class TrainingSet(data.Dataset, whole=False):
 
         # Check if we give patchs of image or not 
         if whole:
-
+            
             img_patch_data = [preprocess(img) for img in tqdm(imgs)]
             img_patch_target = [transforms.ToTensor()(label) for label in tqdm(labels)]
 

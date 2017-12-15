@@ -20,8 +20,9 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
 from loader import TrainingSet, TestSet
-from utils import patched_to_submission_lines, concatenate_images, create_input_regr, load_best_models
+from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, create_input_regr, load_best_models
 from postprocessing import majority_voting
+from parameters import CUDA
 from model import CNN
 from paths import SAVED_MODEL_DIR, PREDICTION_TEST_DIR
 
@@ -31,27 +32,23 @@ if __name__ == '__main__':
     models = load_best_models(SAVED_MODEL_DIR)
 
     # Load the regression model
-    regr = joblib.load('regr.pkl')
+    regr = joblib.load(SAVED_MODEL_DIR + 'regr.pkl')
     #c = regr.coef_
 
     # Load test set
     test_loader = DataLoader(TestSet(), num_workers=4, batch_size=1, shuffle=False)
     
-    # Wrapp tensors
-    for (data, _) in test_loader:
-        if CUDA:
-			data = Variable(data, volatile=True).cuda()
-		else:
-			data = Variable(data, volatile=True)
-
     X_test = []
     y_preds = []
     flips = [] 
     lines = []
-    for (data, _) in tqdm(test_loader):
+    for i, (data, _) in enumerate(tqdm(test_loader)):
         
         # Create predictions
-        X_test = create_input_regr(data, models)
+        if CUDA:
+            X_test = create_input_regr(Variable(data, volatile=True).cuda(), models)
+        else:
+            X_test = create_input_regr(Variable(data, volatile=True), models)
         y_pred = regr.predict(X_test).reshape((608, 608))
 
         # Store prediction along with respective flip version
@@ -62,7 +59,7 @@ if __name__ == '__main__':
         if (i+1)%4 == 0:
             
             # create Kaggle prediction (16x16)
-            kaggle_pred = prediction_to_np_patched(majority_voting(y_preds), False)
+            kaggle_pred = prediction_to_np_patched(majority_voting(y_preds))
             
             # Save the prediction image (concatenated with the real image) for monitoring
             concat_data = concatenate_images(flips[i-3].squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
@@ -76,8 +73,9 @@ if __name__ == '__main__':
             y_preds = []
             
     # Create submission file
-    with open('data/submissions/submission_stacking.csv', 'w') as f:
+    with open('data/submissions/submission_final_test.csv', 'w') as f:
         f.write('id,prediction\n')
         f.writelines('{}\n'.format(line) for line in lines)
 
+    # End message
     print('Predictions done.')
