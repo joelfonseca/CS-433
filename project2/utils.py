@@ -92,8 +92,31 @@ def concatenate_images(img, gt_img):
 
 	return cimg
 
+def img_crop(im, w, h):
+	"""Returns a tensor with all the patches of size wxh from the image passed in argument."""
+    
+    width = im.size(1)
+    height = im.size(2)
+
+    is_2d = len(im.size()) < 3
+
+	list_patches = []
+    for i in range(0, height, h):
+        for j in range(0, width, w):
+
+            if is_2d:
+                im_patch = im[j:j+w, i:i+h]
+            else:
+                im_patch = im[:, j:j+w, i:i+h]
+
+            list_patches.append(im_patch)
+
+    return torch.stack(list_patches)
+
+
 def build_k_indices(data_and_targets, k_fold, seed=1):
     """Builds k indices for k-fold."""
+
     num_row = len(data_and_targets)
     interval = int(num_row / k_fold)
     np.random.seed(seed)
@@ -110,6 +133,7 @@ def train_valid_split(train_loader, ratio, seed):
 	targets = []
 
 	for (d, t) in train_loader:
+		
 		if CUDA:
 			data.append(Variable(d).cuda())
 			targets.append(Variable(t).cuda())

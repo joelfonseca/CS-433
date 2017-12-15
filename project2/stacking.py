@@ -29,9 +29,8 @@ if __name__ == '__main__':
     models = load_best_models(SAVED_MODEL_DIR)
     print('{} models loaded from grid search.' .format(len(models)))
 
-
     # Load the data
-    train_loader = DataLoader(TrainingSet(), num_workers=4, batch_size=1, shuffle=False)
+    train_loader = DataLoader(TrainingSet(whole=True), num_workers=4, batch_size=1, shuffle=False)
 
     # Wrapp tensors
     for (data, target) in train_loader:
