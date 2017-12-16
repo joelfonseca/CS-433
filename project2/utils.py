@@ -184,9 +184,15 @@ def create_input_regr(data, models):
 	for i, model in enumerate(models):
 		
 		if i == 0:
-			X = np.c_[model.predict(data).data.view(-1).cpu().numpy()]
+			if CUDA:
+				X = np.c_[model.predict(data).data.view(-1).cpu().numpy()]
+			else:
+				X = np.c_[model.predict(data).data.view(-1).numpy()]
 		else:
-			X = np.c_[X, model.predict(data).data.view(-1).cpu().numpy()]
+			if CUDA:
+				X = np.c_[X, model.predict(data).data.view(-1).cpu().numpy()]
+			else:
+				X = np.c_[X, model.predict(data).data.view(-1).numpy()]
 	
 	return X
 
@@ -203,7 +209,8 @@ def load_best_models(saved_model_dir):
 		tmp = model_name.split('_')
 		model = CNN(float(tmp[5]), tmp[6])
 		model.load_state_dict(torch.load(model_name))
-		model.cuda()
+		if CUDA:
+			model.cuda()
 		model.eval()
 		models.append(model)
 		
