@@ -208,9 +208,13 @@ def load_best_models(saved_model_dir):
 		
 		tmp = model_name.split('_')
 		model = CNN(float(tmp[5]), tmp[6])
-		model.load_state_dict(torch.load(model_name))
+
 		if CUDA:
+			model.load_state_dict(torch.load(model_name))
 			model.cuda()
+		else:
+			model.load_state_dict(torch.load(model_name, map_location=lambda storage, loc: storage))
+			
 		model.eval()
 		models.append(model)
 		
