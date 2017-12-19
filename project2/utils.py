@@ -144,7 +144,7 @@ def train_valid_split(train_loader, ratio, seed):
 			targets.append(Variable(t))
 
 	# Create list of k indices
-	k_indices = build_k_indices(data, 1//ratio, seed)
+	k_indices = build_k_indices(data, int(1//ratio), seed)
 
 	# Select k value
 	k = 1

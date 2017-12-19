@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 class CNN(nn.Module):
-	def __init__(self, learning_rate, activation, optimizer='Adam', momentum=0.9):
+	def __init__(self, learning_rate=1e-03, activation='leaky', optimizer='Adam', momentum=0.9):
 		super(CNN, self).__init__()
 
 		self.loss_function = nn.BCEWithLogitsLoss()
