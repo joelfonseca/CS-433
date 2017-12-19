@@ -12,11 +12,10 @@ import torch.nn.functional as F
 from torchvision import transforms
 
 from loader import TrainingSet, TestSet
-from parameters import BATCH_SIZES, CUDA, K_FOLD, SEED, OUTPUT_RAW_PREDICTION, CROSS_VALIDATION, MAJORITY_VOTING, LEARNING_RATES, ACTIVATION_FUNCTIONS, OPTIMIZERS
-from model import CNN, SimpleCNN, CompleteCNN
+from parameters import *
+from model import CNN
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, train_valid_split, snapshot
 from postprocessing import majority_voting
-from plot import plot_results, plot_optim_acc, plot_optim_loss
 
 import gc
 import datetime
@@ -35,7 +34,7 @@ the_model.load_state_dict(torch.load(PATH))
 '''
 
 
-TRAIN = True
+TRAIN = False
 
 
 ########## Train our model ##########
@@ -117,13 +116,11 @@ if __name__ == '__main__':
 							if acc_epoch > best_acc[1]:
 								best_acc = (epoch, acc_epoch)
 								snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, True, model.state_dict())
-								plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
 							
 							# Save every 5 epoch
 							if epoch % 5 == 0:
 								run_name_and_info = RUN_NAME + '_{:02}_{:.5f}' .format(epoch, acc_epoch)
 								snapshot(SAVED_MODEL_DIR, RUN_TIME, run_name_and_info, False, model.state_dict())
-								plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
 
 							# Check that the model is not doing worst over the time
 							if best_acc[0] + 10 < epoch :
@@ -132,7 +129,6 @@ if __name__ == '__main__':
 
 							epoch += 1 
 
-						plot_results(FIGURE_DIR, RUN_TIME, RUN_NAME, history)
 						#histories.append((optimizer, history))
 
 					#print(histories)
@@ -151,16 +147,17 @@ if __name__ == '__main__':
 
 		SAVED_MODEL_NAMES = [
 
-			SAVED_MODEL_DIR + "2017-12-06_15-45_CompleteCNN_32_5e-03_leaky_relu_best.pt",
-
-			SAVED_MODEL_DIR + "2017-12-06_15-45_CompleteCNN_32_5e-04_relu_best.pt",
+			SAVED_MODEL_DIR + "2017-12-07_09-42_CompleteCNN_64_1e-03_leaky_relu_best.pt",
 		]
 
 		models = []
 		for model_name in SAVED_MODEL_NAMES:
 			tmp = model_name.split("_")
-			model = CompleteCNN(float(tmp[5]), tmp[6])
-			model.load_state_dict(torch.load(model_name))
+			model = CNN(float(tmp[5]), tmp[6])
+			if CUDA:
+				model.load_state_dict(torch.load(model_name))
+			else:
+				model = torch.load(SAVED_MODEL, map_location=lambda storage, loc: storage)
 			#model =  torch.load(model_name)
 			if CUDA:
 				model.cuda()
@@ -171,8 +168,6 @@ if __name__ == '__main__':
 		print("Model loaded.")
 
 		print("Applying model on test set and predicting...")
-
-		model.eval()
 
 		lines = []
 		if MAJORITY_VOTING:
