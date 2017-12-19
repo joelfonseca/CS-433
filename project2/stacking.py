@@ -42,7 +42,7 @@ if __name__ == '__main__':
             
             if CUDA:
                 X_train = np.r_[create_input_regr(Variable(data).cuda(), models)]
-                y_train = np.r_[Variable(target, volatile=True).cuda().data.view(-1).cpu().numpy()]
+                y_train = np.r_[Variable(target, volatile=True).data.view(-1).numpy()]
             else:
                 X_train = np.r_[create_input_regr(Variable(data), models)]
                 y_train = np.r_[Variable(target, volatile=True).data.view(-1).numpy()]
@@ -50,7 +50,7 @@ if __name__ == '__main__':
             
             if CUDA:
                 X_train = np.r_[X_train, create_input_regr(Variable(data).cuda(), models)]
-                y_train = np.r_[y_train, Variable(target, volatile=True).cuda().data.view(-1).cpu().numpy()]
+                y_train = np.r_[y_train, Variable(target, volatile=True).data.view(-1).numpy()]
             else:
                 X_train = np.r_[X_train, create_input_regr(Variable(data), models)]
                 y_train = np.r_[y_train, Variable(target, volatile=True).data.view(-1).numpy()]
