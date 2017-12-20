@@ -30,7 +30,7 @@ def stacking():
     print('{} models loaded from grid search.' .format(len(models)))
 
     # Load the data
-    train_loader = DataLoader(TrainingSet(whole=True), num_workers=4, batch_size=1, shuffle=False)
+    train_loader = DataLoader(TrainingSet(stacking=True, whole=True), num_workers=4, batch_size=1, shuffle=False)
 
     # Initialize and build matrices for regression
     X_train = []
