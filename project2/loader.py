@@ -18,7 +18,7 @@ from torchvision import transforms
 from preprocessing import data_augmentation
 from postprocessing import add_flips
 from utils import img_crop
-from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, MAJORITY_VOTING
+from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, TEST_AUGMENTATION
 
 # Set of transformations
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -78,8 +78,8 @@ class TestSet(data.Dataset):
 
         print("*** Loading test images ***")
 
-        # Check if we add transformations or not for majority voting
-        if MAJORITY_VOTING:
+        # Check if we add augmentation transformations 
+        if TEST_AUGMENTATION:
             imgs = add_flips(imgs)
         else:
             imgs = [Image.open(img) for img in imgs]

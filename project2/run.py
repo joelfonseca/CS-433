@@ -21,14 +21,12 @@ from torch.autograd import Variable
 
 from loader import TrainingSet, TestSet
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, create_input_regr, load_best_models
-from postprocessing import majority_voting
+from postprocessing import test_augmentation_mean
 from training import train
 from stacking import stacking
 from parameters import CUDA
 from model import CNN
 from paths import SAVED_MODEL_DIR, PREDICTION_TEST_DIR, SUBMISSION_DIR
-
-import h5py
 
 USED_PRETRAINED_MODEL = True
 OUTPUT_PREDICTION = False
@@ -71,7 +69,7 @@ if __name__ == '__main__':
         if (i+1)%4 == 0:
             
             # create Kaggle prediction (16x16)
-            kaggle_pred = prediction_to_np_patched(majority_voting(y_preds))
+            kaggle_pred = prediction_to_np_patched(test_augmentation_mean(y_preds))
             
             if OUTPUT_PREDICTION:
                 # Save the prediction image (concatenated with the real image) for monitoring
