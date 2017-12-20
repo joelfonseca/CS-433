@@ -25,7 +25,7 @@ preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.
 
 class TrainingSet(data.Dataset):
 
-    def __init__(self, whole=False):
+    def __init__(self, stacking=False, whole=False):
 
         # Load images and labels
         imgs = glob.glob('./data/training/images/*.png')
@@ -33,7 +33,7 @@ class TrainingSet(data.Dataset):
         print("*** Loading training images and groundtruth. ***")
 
         # Create data augmentation if set to True
-        if DATA_AUGMENTATION:
+        if DATA_AUGMENTATION and not stacking:
             print("*** Creating data augmentation. ***")
             imgs, labels = data_augmentation(imgs, labels)
         else:
