@@ -57,15 +57,10 @@ The computation to reach our submission rely heavly on GPU computation to speed 
 
 ```sh
 wget http://us.download.nvidia.com/tesla/375.51/nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
-
 sudo dpkg -i nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
-
 sudo apt-get update
-
 sudo apt-get -y install cuda-drivers
-
 sudo apt-get update && sudo apt-get -y upgrade
-
 rm nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
 ```
 
@@ -80,10 +75,12 @@ chmod +x Anaconda3-5.0.1-Linux-x86_64.sh
 
 ### Part 3: Pytorch and other lib
 
+```sh
 rm Anaconda3-5.0.1-Linux-x86_64.sh
 conda install -c soumith pytorch
 conda install -c soumith torchvision
 conda install tqdm
+```
 
 ### Part 4: Add our code
 
