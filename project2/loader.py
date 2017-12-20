@@ -40,7 +40,7 @@ class TrainingSet(data.Dataset):
             imgs = [Image.open(img) for img in imgs]
             labels = [Image.open(label) for label in labels]
 
-        # Check if we give patchs of image or not 
+        # Check if we give patchs of image or the whole image 
         if whole:
             
             img_patch_data = [preprocess(img) for img in tqdm(imgs)]

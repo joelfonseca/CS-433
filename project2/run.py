@@ -23,10 +23,10 @@ from loader import TrainingSet, TestSet
 from utils import prediction_to_np_patched, patched_to_submission_lines, concatenate_images, create_input_regr, load_best_models
 from postprocessing import majority_voting
 from training import train
-form stacking import stacking
+from stacking import stacking
 from parameters import CUDA
 from model import CNN
-from paths import SAVED_MODEL_DIR, PREDICTION_TEST_DIR
+from paths import SAVED_MODEL_DIR, PREDICTION_TEST_DIR, SUBMISSION_DIR
 
 import h5py
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
             y_preds = []
             
     # Create submission file
-    with open('data/submissions/submission_final_test2.csv', 'w') as f:
+    with open(SUBMISSION_DIR + 'submission_final_test2.csv', 'w') as f:
         f.write('id,prediction\n')
         f.writelines('{}\n'.format(line) for line in lines)
 

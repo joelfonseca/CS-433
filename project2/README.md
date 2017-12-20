@@ -8,14 +8,10 @@ The project environment setup is composed as follows:
 
 - folder `data`: contains all the data needed for the project.
 
-    - ` raw_predictions`: folder where the predictions pixel by pixel will be saved.
-    - `submissions`: folder where the .csv submission file will be saved.
-    - `test_predictions`: folder where the test predictions will be saved.
     - `test_set_images`: contains the test images.
     - `training`: contains the training images with the corresponding grountruth.
-    - `mask_to_submission.py`: converts 16x16 image to .csv submission file.
-    - `submission_to_mask.py`: convert .csv submission file to 16x16 image.
 
+- folder `submissions`: folder where the .csv submission file will be saved.
 - folder `figures`: contains the figures used for the report.
 - folder `predictions_test`: contains the predictions (original image + 16x16 prediction).
 - folder `saved_models`: contains all the models developed along this project.

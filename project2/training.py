@@ -50,8 +50,7 @@ def train():
                 if CUDA:
                     model.cuda()
                 
-                MODEL_NAME = 'CNN'
-                RUN_NAME = MODEL_NAME + '_{}_{:.0e}_{}' .format(batch_size, learning_rate, activation_function)
+                RUN_NAME = 'CNN_{}_{:.0e}_{}' .format(batch_size, learning_rate, activation_function)
 
                 epoch = 0
                 best_acc = (0,0)

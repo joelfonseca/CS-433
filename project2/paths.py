@@ -9,3 +9,4 @@
 PREDICTION_TEST_DIR = 'predictions_test/'
 SAVED_MODEL_DIR = 'saved_models/'
 FIGURE_DIR = 'figures/'
+SUBMISSION_DIR = 'submissions/'

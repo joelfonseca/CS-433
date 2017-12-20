@@ -12,8 +12,7 @@ import glob
 import torch
 from torch.autograd import Variable
 
-from postprocessing import outlier_cleaner, tetris_shape_cleaner, border_cleaner, region_cleaner, naive_cleaner
-from parameters import POSTPROCESSING, THRESHOLD_ROAD, CUDA
+from parameters import THRESHOLD_ROAD, CUDA
 from model import CNN
 
 def prediction_to_np_patched(img):
@@ -39,13 +38,6 @@ def prediction_to_np_patched(img):
 				for i in range(16):
 					for j in range(16):
 						img[16*h + i, 16*w + j] = 0
-
-	if POSTPROCESSING:
-		outlier_cleaner(img, 16)
-		tetris_shape_cleaner(img, 16)
-		#border_cleaner(img, 16)
-		region_cleaner(img, 16)
-		#naive_cleaner(img, 16)
 
 	return img
 
@@ -146,7 +138,7 @@ def train_valid_split(train_loader, ratio, seed):
 	# Create list of k indices
 	k_indices = build_k_indices(data, int(1//ratio), seed)
 
-	# Select k value
+	# Select k value (arbitrary)
 	k = 1
 
 	# Create the validation fold

@@ -42,18 +42,20 @@ def stacking():
             
             if CUDA:
                 X_train = np.r_[create_input_regr(Variable(data).cuda(), models)]
-                y_train = np.r_[Variable(target, volatile=True).data.view(-1).numpy()]
             else:
                 X_train = np.r_[create_input_regr(Variable(data), models)]
-                y_train = np.r_[Variable(target, volatile=True).data.view(-1).numpy()]
+
+            y_train = np.r_[Variable(target, volatile=True).data.view(-1).numpy()]
+
         else:
             
             if CUDA:
                 X_train = np.r_[X_train, create_input_regr(Variable(data).cuda(), models)]
-                y_train = np.r_[y_train, Variable(target, volatile=True).data.view(-1).numpy()]
             else:
                 X_train = np.r_[X_train, create_input_regr(Variable(data), models)]
-                y_train = np.r_[y_train, Variable(target, volatile=True).data.view(-1).numpy()]
+
+            y_train = np.r_[y_train, Variable(target, volatile=True).data.view(-1).numpy()]
+
     
     # Create and train the regression
     regr = linear_model.LinearRegression()  
