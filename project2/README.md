@@ -55,18 +55,26 @@ The computation to reach our submission rely heavly on GPU computation to speed 
 
 ### Part 1: CUDA 
 
+```sh
 wget http://us.download.nvidia.com/tesla/375.51/nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
+
 sudo dpkg -i nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
+
 sudo apt-get update
+
 sudo apt-get -y install cuda-drivers
+
 sudo apt-get update && sudo apt-get -y upgrade
+
 rm nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
+```
 
 ### Part 2: Python
-
+```sh
 wget https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh
 chmod +x Anaconda3-5.0.1-Linux-x86_64.sh
 ./Anaconda3-5.0.1-Linux-x86_64.sh
+```
 
 **Note that you will need to interact with the installation of Anaconda (tell 'yes', choose a path), and logout -> login at the end.**
 
