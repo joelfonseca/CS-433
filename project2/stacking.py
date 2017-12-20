@@ -23,7 +23,7 @@ from model import CNN
 from parameters import CUDA
 from paths import SAVED_MODEL_DIR
 
-if __name__ == '__main__':
+def stacking():
 
     # Load all the best models from grid search
     models = load_best_models(SAVED_MODEL_DIR)
@@ -64,3 +64,6 @@ if __name__ == '__main__':
 
     # End message
     print('Regression model trained.')
+
+if __name__ == '__main__':
+    stacking()

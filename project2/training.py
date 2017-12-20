@@ -25,7 +25,7 @@ from paths import SAVED_MODEL_DIR
 
 RUN_TIME = '{:%Y-%m-%d_%H-%M}' .format(datetime.datetime.now())
 
-if __name__ == '__main__':
+def train():
 
     for batch_size in BATCH_SIZES:
 
@@ -99,3 +99,7 @@ if __name__ == '__main__':
                         break
 
                     epoch += 1 
+
+
+if __name__ == '__main__':
+    train()

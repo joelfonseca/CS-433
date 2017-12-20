@@ -23,9 +23,6 @@ from parameters import CUDA, RATIO, SEED
 
 # Parameters for this specific module
 OPTIMIZERS = ['Adam', 'SGD', 'SGD + Momentum']
-BATCH_SIZE = 64
-LEARNING_RATE = 1e-03
-ACTIVATION_FUNCTION = 'leaky'
 NUM_EPOCHS = 100
 
 if __name__ == '__main__':
@@ -46,7 +43,7 @@ if __name__ == '__main__':
             print('Training with batch size: ', BATCH_SIZE, ', learning rate: ', LEARNING_RATE, ', activation function: ', ACTIVATION_FUNCTION, ' and optimizer: ', optimizer, '.')
             
             # Create the model
-            model = CNN(LEARNING_RATE, ACTIVATION_FUNCTION, optimizer)
+            model = CNN(optimizer=optimizer)
             
             if CUDA:
                 model.cuda()
