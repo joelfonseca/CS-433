@@ -144,7 +144,7 @@ def train_valid_split(train_loader, ratio, seed):
 			targets.append(Variable(t))
 
 	# Create list of k indices
-	k_indices = build_k_indices(data, 1//ratio, seed)
+	k_indices = build_k_indices(data, int(1//ratio), seed)
 
 	# Select k value
 	k = 1
@@ -184,9 +184,15 @@ def create_input_regr(data, models):
 	for i, model in enumerate(models):
 		
 		if i == 0:
-			X = np.c_[model.predict(data).data.view(-1).cpu().numpy()]
+			if CUDA:
+				X = np.c_[model.predict(data).data.view(-1).cpu().numpy()]
+			else:
+				X = np.c_[model.predict(data).data.view(-1).numpy()]
 		else:
-			X = np.c_[X, model.predict(data).data.view(-1).cpu().numpy()]
+			if CUDA:
+				X = np.c_[X, model.predict(data).data.view(-1).cpu().numpy()]
+			else:
+				X = np.c_[X, model.predict(data).data.view(-1).numpy()]
 	
 	return X
 
@@ -202,8 +208,13 @@ def load_best_models(saved_model_dir):
 		
 		tmp = model_name.split('_')
 		model = CNN(float(tmp[5]), tmp[6])
-		model.load_state_dict(torch.load(model_name))
-		model.cuda()
+
+		if CUDA:
+			model.load_state_dict(torch.load(model_name))
+			model.cuda()
+		else:
+			model.load_state_dict(torch.load(model_name, map_location=lambda storage, loc: storage))
+			
 		model.eval()
 		models.append(model)
 		
