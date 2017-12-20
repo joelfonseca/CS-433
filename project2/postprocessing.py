@@ -29,7 +29,7 @@ def add_flips(imgs):
 
     return flipped_imgs
 
-def majority_voting(imgs):
+def test_augmentation_mean(imgs):
     """Merges the predictions of the same image from four transformations."""
 
     # Retrieve the different images in correct order

@@ -40,3 +40,58 @@ The project environment setup is composed as follows:
     - **`training.py`**: trains the CNN for different parameters. 
 
     - **`utils.py`**: contains auxiliary functions.
+
+## Instruction to run our code with GPU 
+
+The computation to reach our submission rely heavly on GPU computation to speed up the processing. We get the time with a p2.xlarge instance on AWS, which come with a Nvidia k80 GPU.
+
+ - train.py: ~ 85h 
+ - stacking.py: ~10min
+ - run.py: ~25min
+
+ You can multiply this times by 30 if you are going to use a CPU only.
+
+ Here we give the instruction to install the needed CUDA library, python and pytorch in order for you to run our run.py smoothly.
+
+### Part 1: CUDA 
+
+```sh
+wget http://us.download.nvidia.com/tesla/375.51/nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
+sudo dpkg -i nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
+sudo apt-get update
+sudo apt-get -y install cuda-drivers
+sudo apt-get update && sudo apt-get -y upgrade
+rm nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
+```
+
+### Part 2: Python
+```sh
+wget https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh
+chmod +x Anaconda3-5.0.1-Linux-x86_64.sh
+./Anaconda3-5.0.1-Linux-x86_64.sh
+```
+
+**Note that you will need to interact with the installation of Anaconda (tell 'yes', choose a path), and logout -> login at the end.**
+
+### Part 3: Pytorch and other lib
+
+```sh
+rm Anaconda3-5.0.1-Linux-x86_64.sh
+conda install -c soumith pytorch
+conda install -c soumith torchvision
+conda install tqdm
+```
+
+### Part 4: Add our code
+
+Finally you need to unzip our code at the root (or wherever you want), and download the data from kaggle (https://www.kaggle.com/c/epfml17-segmentation/data). Note that you need to download the `test_set_images.zip` and `training.zip` inside the folder `data` as explained above.
+
+### Part 5: Run
+
+If you want to predict only, go with `python run.py`. If you want to train as well, inside `run.py` and change `USED_PRETRAINED_MODEL = False`.
+
+### Final note
+
+We don't advise to use Windows here. However, if you need pytorch, there is a version you can install  `conda install -c peterjc123 pytorch=0.1.12`. Note that there are bugs, especially memory leaks and you won't be able to train (predict is ok on my desktop with a Nvidia GTX 970).
+ 
+
