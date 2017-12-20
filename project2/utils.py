@@ -192,7 +192,7 @@ def load_best_models(saved_model_dir):
 	"""Loads all the best models from a given directory."""
 
 	# Retrieve all the best models from the directory
-	all_models = glob.glob('saved_models/*_best.pt')
+	all_models = glob.glob(saved_model_dir + '*_best.pt')
 
 	# Load and prepare them for prediction
 	models = []
