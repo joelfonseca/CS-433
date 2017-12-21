@@ -8,3 +8,4 @@ project2/data
 project2/predictions_training
 project2/saved_models
 project2/predictions_test
+*.DS_STORE

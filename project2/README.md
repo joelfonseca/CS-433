@@ -4,6 +4,8 @@ The second project developed for the machine learning course was about road segm
 
 We implemented a Convolutional Neural Network (CNN) using PyTorch as the deep learning framework.
 
+## Project structure
+
 The project environment setup is composed as follows:
 
 - folder `data`: contains all the data needed for the project.
@@ -41,13 +43,26 @@ The project environment setup is composed as follows:
 
     - **`utils.py`**: contains auxiliary functions.
 
+## Library used
+
+- `Python 3.6 (installed with Anaconda 5.0.1)` 
+- `pytorch 0.3.0`
+- `torchvision 0.2.0`
+- `tqdm 4.19.5`
+
+Anaconda comes with every other needed libs. If you don't intend to use Anaconda you might need to install other libs:
+ - `matplotlib` for the plot
+ - `sklearn` for the logistic regression
+ - `pillow` for the images transformation
+ - `numpy` for the matrix manipulation
+
 ## Instruction to run our code with GPU 
 
 The computation to reach our submission rely heavly on GPU computation to speed up the processing. We get the time with a p2.xlarge instance on AWS, which come with a Nvidia k80 GPU.
 
  - train.py: ~ 85h 
  - stacking.py: ~10min
- - run.py: ~25min
+ - run.py: ~20min
 
  You can multiply this times by 30 if you are going to use a CPU only.
 
