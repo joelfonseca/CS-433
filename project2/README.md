@@ -45,10 +45,16 @@ The project environment setup is composed as follows:
 
 ## Library used
 
-`Python 3.6 (installed with Anaconda 5.0.1)` 
-`pytorch 0.3.0`
-`torchvision 0.2.0`
-`tqdm 4.19.5`
+- `Python 3.6 (installed with Anaconda 5.0.1)` 
+- `pytorch 0.3.0`
+- `torchvision 0.2.0`
+- `tqdm 4.19.5`
+
+Anaconda comes with every other needed libs. If you don't intend to use Anaconda you might need to install other libs:
+ - `matplotlib` for the plot
+ - `sklearn` for the logistic regression
+ - `pillow` for the images transformation
+ - `numpy` for the matrix manipulation
 
 ## Instruction to run our code with GPU 
 
