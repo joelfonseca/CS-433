@@ -24,8 +24,8 @@ from parameters import IMG_PATCH_SIZE, DATA_AUGMENTATION, TEST_AUGMENTATION
 preprocess = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 class TrainingSet(data.Dataset):
-
     def __init__(self, stacking=False, whole=False):
+        """Initialize the training set"""
 
         # Load images and labels
         imgs = glob.glob('./data/training/images/*.png')
@@ -68,8 +68,8 @@ class TrainingSet(data.Dataset):
 
 
 class TestSet(data.Dataset):
-
     def __init__(self):
+        """Initialize the test set"""
 
         # Retrieve paths of all test images
         imgs = []

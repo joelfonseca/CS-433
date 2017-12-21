@@ -3,9 +3,10 @@
  
  
 """
-    Module to generate the same submission file used for Kaggle competition.
+    Module to generate the same submission file used for the Kaggle competition.
 """
 
+import sys
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
@@ -28,12 +29,15 @@ from parameters import CUDA
 from model import CNN
 from paths import SAVED_MODEL_DIR, PREDICTION_TEST_DIR, SUBMISSION_DIR
 
-USED_PRETRAINED_MODEL = True
-OUTPUT_PREDICTION = False
+OUTPUT_PREDICTION_IMAGES = False
+
 
 if __name__ == '__main__':
 
-    if not USED_PRETRAINED_MODEL:
+    # Check if "--train" flag is here to know if we want to train or just use the predefined models
+    train = len(sys.argv) > 1 and sys.argv[1] == "--train"
+
+    if train:
         train()
         stacking()
 
@@ -42,7 +46,6 @@ if __name__ == '__main__':
 
     # Load the regression model
     regr = joblib.load(SAVED_MODEL_DIR + 'regr.pkl')
-    #c = regr.coef_
 
     # Load test set
     test_loader = DataLoader(TestSet(), num_workers=4, batch_size=1, shuffle=False)
@@ -71,7 +74,7 @@ if __name__ == '__main__':
             # create Kaggle prediction (16x16)
             kaggle_pred = prediction_to_np_patched(test_augmentation_mean(y_preds))
             
-            if OUTPUT_PREDICTION:
+            if OUTPUT_PREDICTION_IMAGES:
                 # Save the prediction image (concatenated with the real image) for monitoring
                 concat_data = concatenate_images(flips[i-3].squeeze().permute(1, 2, 0).numpy(), kaggle_pred * 255)
                 Image.fromarray(concat_data).convert('RGB').save(PREDICTION_TEST_DIR + 'prediction_' + str((i+1)//4) + '.png')
@@ -84,9 +87,11 @@ if __name__ == '__main__':
             y_preds = []
             
     # Create submission file
-    with open(SUBMISSION_DIR + 'submission_final_test2.csv', 'w') as f:
+    submission_filename = SUBMISSION_DIR + 'submission_final.csv'
+    with open(submission_filename, 'w') as f:
         f.write('id,prediction\n')
         f.writelines('{}\n'.format(line) for line in lines)
 
     # End message
     print('Predictions done.')
+    print('Output in: ' + submission_filename)

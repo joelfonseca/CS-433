@@ -1,9 +1,18 @@
-"""Contains all the preprocessing functions used."""
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+"""
+    Contains all the preprocessing functions used.
+"""
+
 from PIL import Image
 import random
 import numpy as np
 
 def data_augmentation(imgs, labels):
+    """Apply some data augmentation techniques on the images and labels given, e.g. flipping and rotating"""
+
     num_imgs = len(imgs)
 
     imgs_processed = []

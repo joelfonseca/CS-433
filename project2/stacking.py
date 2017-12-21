@@ -24,6 +24,8 @@ from parameters import CUDA
 from paths import SAVED_MODEL_DIR
 
 def stacking():
+    """Use the ensemble learning technique 'stacking' to put weights on all our models
+    using a Linear regression"""
 
     # Load all the best models from grid search
     models = load_best_models(SAVED_MODEL_DIR)
@@ -37,7 +39,7 @@ def stacking():
     y_train = []
 
     for i, (data, target) in enumerate(tqdm(train_loader)):
-
+        
         if i == 0:
             
             if CUDA:

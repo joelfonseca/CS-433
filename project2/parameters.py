@@ -1,5 +1,9 @@
 import torch
 
+"""
+	Contains the different parameters of our program
+"""
+
 LEARNING_RATES = [5e-2, 1e-2, 5e-3, 1e-3, 5e-4, 1e-4]
 BATCH_SIZES = [32, 64, 128]
 ACTIVATION_FUNCTIONS = ['relu', 'leaky', 'prelu']

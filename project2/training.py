@@ -13,7 +13,6 @@ from sklearn.metrics import accuracy_score
 import torch
 from torch.utils.data import DataLoader
 
-import gc
 import datetime
 from tqdm import tqdm
 
@@ -23,9 +22,11 @@ from parameters import BATCH_SIZES, CUDA, RATIO, SEED, LEARNING_RATES, ACTIVATIO
 from model import CNN
 from paths import SAVED_MODEL_DIR
 
-RUN_TIME = '{:%Y-%m-%d_%H-%M}' .format(datetime.datetime.now())
+RUN_TIME = '{:%Y-%m-%d_%H-%M}'.format(datetime.datetime.now())
+OVERFITTING_EPOCH_THRESHOLD = 10
 
 def train():
+    """Train different models using the parameters defined in 'parameters.py'"""
 
     for batch_size in BATCH_SIZES:
 
@@ -93,7 +94,7 @@ def train():
                         snapshot(SAVED_MODEL_DIR, RUN_TIME, RUN_NAME, True, model.state_dict())
 
                     # Check that the model is not doing worst over the time
-                    if best_acc[0] + 10 < epoch :
+                    if best_acc[0] + OVERFITTING_EPOCH_THRESHOLD < epoch :
                         print('Overfitting. Stopped at epoch {}.' .format(epoch))
                         break
 

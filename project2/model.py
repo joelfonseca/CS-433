@@ -13,6 +13,7 @@ import torch.optim as optim
 
 class CNN(nn.Module):
 	def __init__(self, learning_rate=1e-3, activation='leaky', optimizer='Adam', momentum=0.9):
+		"""Initialize a model with a U-Net architecture"""
 		super(CNN, self).__init__()
 
 		self.loss_function = nn.BCEWithLogitsLoss()
@@ -111,6 +112,7 @@ class CNN(nn.Module):
 			self.optimizer = optim.SGD(self.parameters(), lr=learning_rate, momentum=momentum)
 
 	def forward(self, input):
+		"""Feed the model with input and return output"""
 		in_conv = self.in_conv(input)
 		down1 = self.down1(in_conv)
 		down2 = self.down2(down1)
@@ -123,6 +125,7 @@ class CNN(nn.Module):
 		return out_conv
 
 	def step(self, input, target):
+		"""Do one training step and return the loss"""
 		self.train()
 		self.zero_grad()
 		out = self.forward(input)
@@ -133,4 +136,5 @@ class CNN(nn.Module):
 		return loss.data[0]
 
 	def predict(self, input):
+		"""Predict an input using the trained network + do a sigmoid to get output in [0, 1]"""
 		return F.sigmoid(self.forward(input))
