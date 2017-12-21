@@ -58,6 +58,8 @@ Anaconda comes with every other needed libs. If you don't intend to use Anaconda
 
 ## Instruction to run our code with GPU 
 
+**If you have any issues running the code on a GPU, please see with Frederik Künstner, we had a discussion about that with him and he agreed to run our code on a GPU.**
+
 The computation to reach our submission rely heavly on GPU computation to speed up the processing. We get the time with a p2.xlarge instance on AWS, which come with a Nvidia k80 GPU.
 
  - train.py: ~79h
