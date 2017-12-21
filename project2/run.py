@@ -54,6 +54,8 @@ if __name__ == '__main__':
     y_preds = []
     flips = [] 
     lines = []
+
+    print("*** Predicting test images ***")
     for i, (data, _) in enumerate(tqdm(test_loader)):
         
         # Create predictions
