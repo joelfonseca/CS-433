@@ -79,6 +79,8 @@ sudo apt-get update && sudo apt-get -y upgrade
 rm nvidia-driver-local-repo-ubuntu1604_375.51-1_amd64.deb
 ```
 
+Note: During the "upgrade" part, it is possible that a screen ask you if you want to keep the current version of some library. You can just hit "enter" and don't care about it. If you are running that on your system, you're responsible on what you want to upgrade or not, and you might want to remove the "-y" flag to avoid upgrading something that you don't want to.
+
 ### Part 2: Python
 ```sh
 wget https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh
