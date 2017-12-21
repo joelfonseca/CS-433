@@ -60,11 +60,11 @@ Anaconda comes with every other needed libs. If you don't intend to use Anaconda
 
 The computation to reach our submission rely heavly on GPU computation to speed up the processing. We get the time with a p2.xlarge instance on AWS, which come with a Nvidia k80 GPU.
 
- - train.py: ~ 85h 
+ - train.py: ~79h
  - stacking.py: ~10min
  - run.py: ~20min
 
- You can multiply this times by 30 if you are going to use a CPU only.
+ You can multiply this times by ~30 if you are going to use a CPU only.
 
  Here we give the instruction to install the needed CUDA library, python and pytorch in order for you to run our run.py smoothly.
 
@@ -103,7 +103,7 @@ Finally you need to unzip our code at the root (or wherever you want), and downl
 
 ### Part 5: Run
 
-If you want to predict only, go with `python run.py`. If you want to train as well, inside `run.py` and change `USED_PRETRAINED_MODEL = False`.
+If you want to predict only, go with `python run.py`. If you want to train as well, go with `run.py --train`.
 
 ### Final note
 
